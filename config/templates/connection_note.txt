@@ -1,0 +1,3 @@
+Hi {first_name} — {specific_compliment_from_post_or_headline}.
+
+I work with {title_type} leaders on {pain_area}. Not sure if it's relevant, but thought it worth connecting.

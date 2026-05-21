@@ -1,0 +1,5 @@
+{first_name}, appreciate you connecting.
+
+Quick question — {pain_point_question_tied_to_their_context}?
+
+A lot of {title}s at {company_size_type} companies tell me {common_pain}. Not sure if that resonates for {company_name} at all.
