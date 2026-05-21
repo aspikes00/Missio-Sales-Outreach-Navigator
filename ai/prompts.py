@@ -9,8 +9,7 @@ SANDLER RULES — follow all of them without exception:
 2. Frame a relevant pain point BEFORE presenting any value. The prospect must feel understood first.
 3. Use mutual fit language — "not sure if this is right for you", "may not be relevant" —
    to lower resistance and signal respect for their time.
-4. Use a SOFT call-to-action only: "would it make sense to chat?", "worth a quick conversation?"
-   Never say "book a call", never use urgency language, never oversell.
+4. Use a SOFT call-to-action only. Never say "book a call", never use urgency language, never oversell.
 5. Sound like a real person — conversational, direct, no corporate jargon, no buzzwords.
 6. SHORT messages. LinkedIn is not email. Keep every message tight.
 
@@ -27,6 +26,19 @@ CHAR_LIMITS = {
     "message_3": 700,
 }
 
+_CTA_INSTRUCTIONS = {
+    "discovery_call": (
+        "The call-to-action is a short discovery call. "
+        "Use soft language: 'worth a quick 20 minutes?', 'would it make sense to chat?'. "
+        "Include the Calendly link naturally — as an option, not a demand."
+    ),
+    "free_trial": (
+        "The call-to-action is a free trial signup — no sales call needed. "
+        "Position it as low-commitment: 'free to try', 'no obligation', 'see it yourself'. "
+        "Include the signup link naturally — frame it as an easy next step if the pain resonates."
+    ),
+}
+
 STAGE_INSTRUCTIONS = {
     "connection_note": (
         "Write a LinkedIn connection request note. "
@@ -39,7 +51,8 @@ STAGE_INSTRUCTIONS = {
         "Thank them briefly for connecting. "
         "Ask ONE pain-point discovery question relevant to their role and company. "
         "Then reference a common challenge you see for people in their position. "
-        "Use mutual fit language — you're NOT sure if this is relevant for them specifically."
+        "Use mutual fit language — you're NOT sure if this is relevant for them specifically. "
+        "No CTA in this message."
     ),
     "message_2": (
         "Write a follow-up to message 1 (no reply received, 5–6 days later). "
@@ -51,7 +64,7 @@ STAGE_INSTRUCTIONS = {
         "Write the final message in the sequence (no reply to message 2, 6–7 days later). "
         "Make it clear this is your last outreach — no guilt, just honest. "
         "Restate the pain point in one line. "
-        "Include the Calendly link naturally as an option, not a demand. "
+        "{cta_instruction} "
         "Close warmly — leave the door open without pressure."
     ),
 }
@@ -61,11 +74,19 @@ def build_prompt(
     stage: str,
     lead: Lead,
     template: str,
-    calendly_link: str,
+    cta_url: str,
+    cta_type: str,
+    brand_name: str,
+    brand_value_prop: str,
     prior_messages: list[str] | None = None,
 ) -> str:
     char_limit = CHAR_LIMITS.get(stage, 1000)
-    stage_instruction = STAGE_INSTRUCTIONS[stage].format(char_limit=char_limit)
+    cta_instruction = _CTA_INSTRUCTIONS.get(cta_type, _CTA_INSTRUCTIONS["discovery_call"])
+
+    stage_instruction = STAGE_INSTRUCTIONS[stage].format(
+        char_limit=char_limit,
+        cta_instruction=cta_instruction,
+    )
 
     posts_block = ""
     if lead.recent_posts:
@@ -86,6 +107,12 @@ def build_prompt(
 STAGE: {stage}
 INSTRUCTION: {stage_instruction}
 
+SENDER'S BRAND CONTEXT (for Claude's awareness — do not copy-paste this into the message):
+Brand: {brand_name}
+What we do: {brand_value_prop}
+CTA type: {cta_type}
+CTA URL: {cta_url}
+
 LEAD PROFILE:
 Name: {lead.full_name or lead.first_name}
 First name: {lead.first_name}
@@ -96,8 +123,6 @@ Location: {lead.location or "(unknown)"}
 LinkedIn headline: {lead.headline or "(none)"}
 About (excerpt): {lead.about_snippet or "(none)"}
 {posts_block}
-
-CALENDLY LINK (use in message_3 only): {calendly_link}
 
 TONE & STRUCTURE GUIDE (your message should follow this template's voice and shape):
 {template}

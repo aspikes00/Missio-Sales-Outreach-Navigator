@@ -5,6 +5,7 @@ import anthropic
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ai.prompts import CHAR_LIMITS, SYSTEM_PROMPT, build_prompt
+from config.settings import BrandConfig
 from database.models import Lead
 
 logger = logging.getLogger(__name__)
@@ -20,14 +21,17 @@ class MessageGenerator:
         lead: Lead,
         stage: str,
         template: str,
-        calendly_link: str,
+        brand: BrandConfig,
         prior_messages: Optional[list[str]] = None,
     ) -> str:
         prompt = build_prompt(
             stage=stage,
             lead=lead,
             template=template,
-            calendly_link=calendly_link,
+            cta_url=brand.cta_url,
+            cta_type=brand.cta_type,
+            brand_name=brand.name,
+            brand_value_prop=brand.value_prop,
             prior_messages=prior_messages,
         )
 

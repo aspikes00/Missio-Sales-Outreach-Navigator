@@ -1,0 +1,7 @@
+{first_name}, last one from me.
+
+If {pain_restatement} is something {company_name} deals with, it might be worth a look — no commitment, free to try.
+
+{cta_url}
+
+Either way — appreciate the connection.

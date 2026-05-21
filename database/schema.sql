@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS leads (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     linkedin_url        TEXT UNIQUE NOT NULL,
+    brand               TEXT NOT NULL DEFAULT 'default',
     first_name          TEXT NOT NULL,
     last_name           TEXT,
     full_name           TEXT,
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS leads (
 CREATE TABLE IF NOT EXISTS outreach_log (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     lead_id         INTEGER NOT NULL REFERENCES leads(id),
+    brand           TEXT NOT NULL DEFAULT 'default',
     stage           TEXT NOT NULL,
     message_text    TEXT NOT NULL,
     sent_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -34,17 +36,21 @@ CREATE TABLE IF NOT EXISTS outreach_log (
 
 CREATE TABLE IF NOT EXISTS daily_stats (
     id                      INTEGER PRIMARY KEY AUTOINCREMENT,
-    date                    TEXT UNIQUE NOT NULL,
+    date                    TEXT NOT NULL,
+    brand                   TEXT NOT NULL DEFAULT 'default',
     connections_sent        INTEGER DEFAULT 0,
     messages_sent           INTEGER DEFAULT 0,
     replies_received        INTEGER DEFAULT 0,
     bookings_detected       INTEGER DEFAULT 0,
     session_duration_mins   INTEGER DEFAULT 0,
     errors_encountered      INTEGER DEFAULT 0,
-    created_at              DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at              DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(date, brand)
 );
 
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+CREATE INDEX IF NOT EXISTS idx_leads_brand ON leads(brand);
 CREATE INDEX IF NOT EXISTS idx_leads_last_activity ON leads(last_activity_at);
 CREATE INDEX IF NOT EXISTS idx_outreach_log_lead_id ON outreach_log(lead_id);
 CREATE INDEX IF NOT EXISTS idx_outreach_log_sent_at ON outreach_log(sent_at);
+CREATE INDEX IF NOT EXISTS idx_daily_stats_date ON daily_stats(date);

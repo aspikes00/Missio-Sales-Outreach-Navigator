@@ -20,6 +20,21 @@ class Database:
         schema = schema_path.read_text(encoding="utf-8")
         with self.transaction() as conn:
             conn.executescript(schema)
+        self._migrate(schema_path)
+
+    def _migrate(self, schema_path: Path):
+        """Apply additive column migrations for existing databases."""
+        migrations = [
+            ("leads", "brand", "TEXT NOT NULL DEFAULT 'default'"),
+            ("outreach_log", "brand", "TEXT NOT NULL DEFAULT 'default'"),
+            ("daily_stats", "brand", "TEXT NOT NULL DEFAULT 'default'"),
+        ]
+        with self.transaction() as conn:
+            for table, column, col_def in migrations:
+                cur = conn.execute(f"PRAGMA table_info({table})")
+                existing_cols = {row[1] for row in cur.fetchall()}
+                if column not in existing_cols:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_def}")
 
     @contextmanager
     def transaction(self):

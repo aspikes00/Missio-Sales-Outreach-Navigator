@@ -1,0 +1,12 @@
+[brand]
+name = "Missio Software"
+slug = "example-free-trial"
+description = "SaaS platform for B2B sales teams to automate and track outreach"
+value_prop = "A sales automation platform built for B2B teams — tracks every touchpoint, scores leads, and surfaces the ones ready to buy."
+
+[outreach]
+cta_type = "free_trial"
+cta_url = "https://app.yoursoftware.com/signup?ref=linkedin"
+sales_nav_list_url = "https://www.linkedin.com/sales/lists/people/YOUR_OTHER_LIST_ID_HERE"
+daily_connection_limit = 5
+daily_message_limit = 8

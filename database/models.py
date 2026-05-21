@@ -7,6 +7,7 @@ from typing import Optional
 class Lead:
     id: Optional[int]
     linkedin_url: str
+    brand: str
     first_name: str
     last_name: Optional[str] = None
     full_name: Optional[str] = None
@@ -34,7 +35,7 @@ class Lead:
     @classmethod
     def from_row(cls, row: tuple) -> "Lead":
         cols = [
-            "id", "linkedin_url", "first_name", "last_name", "full_name",
+            "id", "linkedin_url", "brand", "first_name", "last_name", "full_name",
             "title", "company_name", "industry", "location", "headline",
             "about_snippet", "recent_post_1", "recent_post_2", "recent_post_3",
             "connection_degree", "status", "source_list", "imported_at",
@@ -47,6 +48,7 @@ class Lead:
 class OutreachLog:
     id: Optional[int]
     lead_id: int
+    brand: str
     stage: str
     message_text: str
     sent_at: Optional[datetime] = None
@@ -55,7 +57,7 @@ class OutreachLog:
 
     @classmethod
     def from_row(cls, row: tuple) -> "OutreachLog":
-        cols = ["id", "lead_id", "stage", "message_text", "sent_at", "status", "error_message"]
+        cols = ["id", "lead_id", "brand", "stage", "message_text", "sent_at", "status", "error_message"]
         return cls(**dict(zip(cols, row)))
 
 
@@ -63,6 +65,7 @@ class OutreachLog:
 class DailyStats:
     id: Optional[int]
     date: str
+    brand: str
     connections_sent: int = 0
     messages_sent: int = 0
     replies_received: int = 0
@@ -77,7 +80,7 @@ class DailyStats:
     @classmethod
     def from_row(cls, row: tuple) -> "DailyStats":
         cols = [
-            "id", "date", "connections_sent", "messages_sent", "replies_received",
+            "id", "date", "brand", "connections_sent", "messages_sent", "replies_received",
             "bookings_detected", "session_duration_mins", "errors_encountered",
         ]
         return cls(**dict(zip(cols, row)))

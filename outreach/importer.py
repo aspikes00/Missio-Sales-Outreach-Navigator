@@ -33,7 +33,9 @@ class ImportResult:
             self.errors = []
 
 
-def import_from_csv(filepath: str, db: Database, source_list: Optional[str] = None) -> ImportResult:
+def import_from_csv(
+    filepath: str, db: Database, brand: str, source_list: Optional[str] = None
+) -> ImportResult:
     path = Path(filepath)
     if not path.exists():
         raise FileNotFoundError(f"CSV file not found: {filepath}")
@@ -56,7 +58,7 @@ def import_from_csv(filepath: str, db: Database, source_list: Optional[str] = No
         for row_num, row in enumerate(reader, start=2):
             norm = {k.lower().strip(): v.strip() for k, v in row.items()}
             try:
-                lead = _row_to_lead(norm, col_index, source_list)
+                lead = _row_to_lead(norm, col_index, brand, source_list)
                 if not lead.linkedin_url:
                     result.errors.append(f"Row {row_num}: missing LinkedIn URL — skipped")
                     result.skipped += 1
@@ -73,12 +75,14 @@ def import_from_csv(filepath: str, db: Database, source_list: Optional[str] = No
                 result.errors.append(f"Row {row_num}: {e}")
                 result.skipped += 1
 
-    logger.info("Import complete — added: %d, skipped: %d, errors: %d",
-                result.added, result.skipped, len(result.errors))
+    logger.info(
+        "Import complete [%s] — added: %d, skipped: %d, errors: %d",
+        brand, result.added, result.skipped, len(result.errors),
+    )
     return result
 
 
-def _row_to_lead(norm: dict, col_index: dict, source_list: Optional[str]) -> Lead:
+def _row_to_lead(norm: dict, col_index: dict, brand: str, source_list: Optional[str]) -> Lead:
     def get(field):
         key = col_index.get(field)
         return norm.get(key, "").strip() if key else ""
@@ -96,6 +100,7 @@ def _row_to_lead(norm: dict, col_index: dict, source_list: Optional[str]) -> Lea
     return Lead(
         id=None,
         linkedin_url=linkedin_url,
+        brand=brand,
         first_name=first_name,
         last_name=last_name,
         full_name=full_name or f"{first_name} {last_name}".strip(),

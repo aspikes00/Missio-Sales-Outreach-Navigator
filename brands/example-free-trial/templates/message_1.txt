@@ -1,0 +1,5 @@
+{first_name}, appreciate you connecting.
+
+Quick question — {pain_point_question_tied_to_their_context}?
+
+A lot of {title}s dealing with {common_pain} end up wasting a lot of time on manual work that shouldn't be manual. Not sure if that's the case at {company_name}.

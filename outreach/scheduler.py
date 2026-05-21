@@ -1,6 +1,5 @@
 import logging
 import random
-from datetime import date
 
 from database.db import Database
 from database.models import Lead
@@ -13,8 +12,8 @@ from database.queries import (
 logger = logging.getLogger(__name__)
 
 WARMUP_SCHEDULE = [
-    (3, 3),   # days 1-3: max 3/day
-    (7, 5),   # days 4-7: max 5/day
+    (3, 3),
+    (7, 5),
 ]
 
 
@@ -24,29 +23,29 @@ class Scheduler:
         self._message_limit = daily_message_limit
         self._warmup_days = warmup_days
 
-    def build_queue(self, db: Database, today: str) -> list[Lead]:
+    def build_queue(self, db: Database, today: str, brand: str) -> list[Lead]:
         with db.transaction() as conn:
-            stats = get_or_create_daily_stats(conn, today)
-            active_days = get_active_days_count(conn)
+            stats = get_or_create_daily_stats(conn, today, brand)
+            active_days = get_active_days_count(conn, brand)
 
         effective_limit = self._get_effective_limit(active_days)
         remaining = effective_limit - stats.total_sent
         if remaining <= 0:
-            logger.info("Daily limit already reached (%d actions). No more sends today.", effective_limit)
+            logger.info("[%s] Daily limit reached (%d actions). No more sends today.", brand, effective_limit)
             return []
 
         with db.transaction() as conn:
-            candidates = get_leads_due_for_outreach(conn, today, limit=remaining * 3)
+            candidates = get_leads_due_for_outreach(conn, today, limit=remaining * 3, brand=brand)
 
         if not candidates:
-            logger.info("No leads due for outreach today.")
+            logger.info("[%s] No leads due for outreach today.", brand)
             return []
 
         random.shuffle(candidates)
         queue = candidates[:remaining]
         logger.info(
-            "Queue built: %d leads (effective daily limit: %d, already sent: %d)",
-            len(queue), effective_limit, stats.total_sent,
+            "[%s] Queue built: %d leads (effective limit: %d, already sent: %d)",
+            brand, len(queue), effective_limit, stats.total_sent,
         )
         return queue
 
@@ -56,15 +55,14 @@ class Scheduler:
                 if active_days <= threshold:
                     logger.info("Warmup mode (day %d): limit is %d/day", active_days, limit)
                     return limit
-        total = self._connection_limit + self._message_limit
-        return total
+        return self._connection_limit + self._message_limit
 
-    def connections_remaining(self, db: Database, today: str) -> int:
+    def connections_remaining(self, db: Database, today: str, brand: str) -> int:
         with db.transaction() as conn:
-            stats = get_or_create_daily_stats(conn, today)
+            stats = get_or_create_daily_stats(conn, today, brand)
         return max(0, self._connection_limit - stats.connections_sent)
 
-    def messages_remaining(self, db: Database, today: str) -> int:
+    def messages_remaining(self, db: Database, today: str, brand: str) -> int:
         with db.transaction() as conn:
-            stats = get_or_create_daily_stats(conn, today)
+            stats = get_or_create_daily_stats(conn, today, brand)
         return max(0, self._message_limit - stats.messages_sent)

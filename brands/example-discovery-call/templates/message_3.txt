@@ -1,0 +1,7 @@
+{first_name}, last note from me on this.
+
+If {pain_restatement} is ever on your radar, happy to share what's working for teams like {company_name}.
+
+Here's a link if you'd ever want 20 min: {cta_url}
+
+Either way — wish you well.

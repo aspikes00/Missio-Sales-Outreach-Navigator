@@ -1,0 +1,12 @@
+[brand]
+name = "Missio Digital"
+slug = "example-discovery-call"
+description = "B2B digital marketing agency helping companies build predictable pipeline"
+value_prop = "We help B2B companies generate qualified pipeline through strategic digital marketing — without the guesswork."
+
+[outreach]
+cta_type = "discovery_call"
+cta_url = "https://calendly.com/yourname/discovery"
+sales_nav_list_url = "https://www.linkedin.com/sales/lists/people/YOUR_LIST_ID_HERE"
+daily_connection_limit = 5
+daily_message_limit = 8

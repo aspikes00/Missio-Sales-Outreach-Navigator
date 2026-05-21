@@ -1,12 +1,12 @@
 from datetime import date
+from typing import Optional
 
-from rich.columns import Columns
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
 from database.db import Database
-from database.queries import get_or_create_daily_stats, get_pipeline_counts
+from database.queries import get_all_brands_daily_stats, get_or_create_daily_stats, get_pipeline_by_brand, get_pipeline_counts
 
 console = Console()
 
@@ -37,45 +37,46 @@ STATUS_COLORS = {
 }
 
 
-def render_dashboard(db: Database):
+def render_dashboard(db: Database, brand_slug: Optional[str] = None):
     today = date.today().isoformat()
 
     with db.transaction() as conn:
-        stats = get_or_create_daily_stats(conn, today)
-        pipeline = get_pipeline_counts(conn)
+        if brand_slug:
+            all_stats = [get_or_create_daily_stats(conn, today, brand_slug)]
+        else:
+            all_stats = get_all_brands_daily_stats(conn, today)
+        pipeline_by_brand = get_pipeline_by_brand(conn)
 
-    # Today's stats panel
-    stats_table = Table(show_header=False, box=None, padding=(0, 1))
-    stats_table.add_column("Metric", style="bold")
-    stats_table.add_column("Value", justify="right")
+    console.print(f"\n[bold]Missio Outreach — {today}[/]\n")
 
-    conn_pct = f"{stats.connections_sent} sent"
-    msg_pct = f"{stats.messages_sent} sent"
+    for stats in all_stats:
+        t = Table(show_header=False, box=None, padding=(0, 1))
+        t.add_column("Metric", style="bold", min_width=22)
+        t.add_column("Value", justify="right")
+        t.add_row("Connections sent", f"[cyan]{stats.connections_sent}[/]")
+        t.add_row("Messages sent", f"[cyan]{stats.messages_sent}[/]")
+        t.add_row("Replies received", f"[green]{stats.replies_received}[/]")
+        t.add_row("Bookings", f"[bright_green]{stats.bookings_detected}[/]")
+        t.add_row("Errors", f"[red]{stats.errors_encountered}[/]")
 
-    stats_table.add_row("Connections today", f"[cyan]{conn_pct}[/]")
-    stats_table.add_row("Messages today", f"[cyan]{msg_pct}[/]")
-    stats_table.add_row("Replies received", f"[green]{stats.replies_received}[/]")
-    stats_table.add_row("Bookings", f"[bright_green]{stats.bookings_detected}[/]")
-    stats_table.add_row("Errors", f"[red]{stats.errors_encountered}[/]")
+        console.print(Panel(t, title=f"[bold]Today — {stats.brand}[/]", border_style="blue"))
 
-    stats_panel = Panel(stats_table, title=f"[bold]Today — {today}[/]", border_style="blue")
-
-    # Pipeline table
-    pipeline_table = Table(title="Lead Pipeline", border_style="blue")
-    pipeline_table.add_column("Status", style="bold")
-    pipeline_table.add_column("Count", justify="right")
-
-    for status in STATUS_ORDER:
-        count = pipeline.get(status, 0)
-        if count == 0:
+    # Pipeline per brand
+    for brand_key, pipeline in pipeline_by_brand.items():
+        if brand_slug and brand_key != brand_slug:
             continue
-        color = STATUS_COLORS.get(status, "white")
-        pipeline_table.add_row(f"[{color}]{status}[/]", f"[{color}]{count}[/]")
+        pt = Table(title=f"Pipeline — {brand_key}", border_style="blue")
+        pt.add_column("Status", style="bold")
+        pt.add_column("Count", justify="right")
+        for status in STATUS_ORDER:
+            count = pipeline.get(status, 0)
+            if count == 0:
+                continue
+            color = STATUS_COLORS.get(status, "white")
+            flag = "  [bright_green]← ACTION REQUIRED[/]" if status == "needs_response" else ""
+            pt.add_row(f"[{color}]{status}[/]", f"[{color}]{count}[/]" + flag)
+        total = sum(pipeline.values())
+        pt.add_row("[bold]TOTAL[/]", f"[bold]{total}[/]")
+        console.print(pt)
 
-    total = sum(pipeline.values())
-    pipeline_table.add_row("[bold]TOTAL[/]", f"[bold]{total}[/]")
-
-    console.print()
-    console.print(stats_panel)
-    console.print(pipeline_table)
     console.print()
