@@ -42,6 +42,8 @@ class BrandConfig:
     cta_type: str        # "discovery_call" | "free_trial"
     cta_url: str
     sales_nav_list_url: str
+    sales_nav_list_name: str   # exact list name as it appears in Sales Navigator
+    sales_nav_search_url: str  # search URL with ICP filters pre-applied (for populate-list)
     daily_connection_limit: int
     daily_message_limit: int
     templates_dir: Path
@@ -116,6 +118,8 @@ class Settings:
             cta_type=o["cta_type"],
             cta_url=o["cta_url"],
             sales_nav_list_url=o.get("sales_nav_list_url", ""),
+            sales_nav_list_name=o.get("sales_nav_list_name", ""),
+            sales_nav_search_url=o.get("sales_nav_search_url", ""),
             daily_connection_limit=o.get("daily_connection_limit", 5),
             daily_message_limit=o.get("daily_message_limit", 8),
             templates_dir=brand_dir / "templates",

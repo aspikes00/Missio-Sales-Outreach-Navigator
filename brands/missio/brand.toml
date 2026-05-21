@@ -51,6 +51,17 @@ ABSOLUTELY FORBIDDEN — never use these words or phrases under any circumstance
 [outreach]
 cta_type = "discovery_call"
 cta_url = "https://calendly.com/digital-marketing-help/lets-discuss-your-marketing-goals-30"
+
+# Paste your saved list URL here (used by: python main.py run --brand missio)
 sales_nav_list_url = "https://www.linkedin.com/sales/lists/people/YOUR_MISSIO_LIST_ID_HERE"
+
+# Exact name of your saved list as it appears inside Sales Navigator
+# (used by: python main.py populate-list --brand missio)
+sales_nav_list_name = "YOUR LIST NAME HERE"
+
+# Your saved search URL with all ICP filters already applied
+# (used by: python main.py populate-list --brand missio)
+sales_nav_search_url = "https://www.linkedin.com/sales/search/people?YOUR_SEARCH_PARAMS_HERE"
+
 daily_connection_limit = 5
 daily_message_limit = 8

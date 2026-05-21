@@ -168,6 +168,95 @@ def mark_dnc(url: str):
     click.echo(f"Marked {lead.full_name or url} as do-not-contact.")
 
 
+@cli.command("populate-list")
+@click.option("--brand", required=True, help="Brand slug (reads search URL and list name from brand.toml).")
+@click.option("--search-url", default=None,
+              help="Override the Sales Navigator search URL (optional — defaults to brand.toml value).")
+@click.option("--list-name", default=None,
+              help="Override the list name (optional — defaults to brand.toml value).")
+@click.option("--max", "max_per_session", default=200, show_default=True,
+              help="Max leads to add per run. Safe to run daily until the list is full.")
+@click.option("--start-page", default=1, show_default=True,
+              help="Resume from a specific search results page number.")
+def populate_list(brand: str, search_url: str, list_name: str, max_per_session: int, start_page: int):
+    """
+    Page through a Sales Navigator search and bulk-add results to your saved list.
+
+    Runs at human speed with realistic delays. Safe to run daily.
+    Use --max to control how many leads are added per session.
+    Use --start-page to resume where you left off.
+
+    Example:
+      python main.py populate-list --brand missio
+      python main.py populate-list --brand missio --max 100 --start-page 5
+    """
+    settings, db = _load_common()
+    brand_config = settings.load_brand(brand)
+
+    effective_search_url = search_url or brand_config.sales_nav_search_url
+    effective_list_name = list_name or brand_config.sales_nav_list_name
+
+    if not effective_search_url or "YOUR_SEARCH_PARAMS" in effective_search_url:
+        raise click.UsageError(
+            "No search URL configured. Either:\n"
+            "  1. Set sales_nav_search_url in brands/missio/brand.toml\n"
+            "  2. Pass --search-url 'https://www.linkedin.com/sales/search/people?...'"
+        )
+    if not effective_list_name or "YOUR LIST NAME" in effective_list_name:
+        raise click.UsageError(
+            "No list name configured. Either:\n"
+            "  1. Set sales_nav_list_name in brands/missio/brand.toml\n"
+            "  2. Pass --list-name 'Your Exact List Name'"
+        )
+
+    click.echo(f"Brand:       {brand_config.name}")
+    click.echo(f"List name:   {effective_list_name}")
+    click.echo(f"Max per run: {max_per_session} leads (~{max_per_session // 25} pages)")
+    click.echo(f"Start page:  {start_page}")
+    click.echo()
+    click.echo("Opening browser... (this will be visible — that's intentional)")
+
+    from linkedin.auth import ensure_authenticated
+    from linkedin.browser import BrowserManager
+    from linkedin.list_builder import SelectorOutdatedError, populate_list_from_search
+    from safety.humanizer import Humanizer
+
+    humanizer = Humanizer(
+        min_delay=settings.min_delay_seconds,
+        max_delay=settings.max_delay_seconds,
+    )
+
+    with BrowserManager(settings) as browser:
+        ensure_authenticated(
+            browser.page, settings.linkedin_email, settings.linkedin_password
+        )
+
+        try:
+            result = populate_list_from_search(
+                page=browser.page,
+                search_url=effective_search_url,
+                list_name=effective_list_name,
+                humanizer=humanizer,
+                max_per_session=max_per_session,
+                start_page=start_page,
+            )
+        except SelectorOutdatedError as e:
+            click.echo(f"\n[!] LinkedIn UI has changed — selector needs updating:\n{e}")
+            click.echo("\nOpen an issue or update linkedin/selectors.py manually.")
+            return
+
+    click.echo(f"\nDone.")
+    click.echo(f"  Leads added this run:  ~{result['added']}")
+    click.echo(f"  Pages processed:       {result['pages_processed']}")
+    click.echo(f"  Stopped because:       {result['stopped_reason']}")
+
+    if result["stopped_reason"] == "session_limit_reached":
+        click.echo(f"\n  Resume tomorrow with:")
+        click.echo(f"  python main.py populate-list --brand {brand} --start-page {result['resume_from_page']}")
+    elif result["stopped_reason"] in ("no_more_results", "no_next_page"):
+        click.echo(f"\n  All available search results have been added to the list.")
+
+
 @cli.command("list-brands")
 def list_brands():
     """List all configured brands."""

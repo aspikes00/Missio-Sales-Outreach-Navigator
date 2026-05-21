@@ -34,10 +34,28 @@ CONNECT_SEND_WITHOUT_NOTE = 'button[aria-label="Send without a note"]'
 MESSAGE_COMPOSE_TEXTAREA = '.msg-form__contenteditable'
 MESSAGE_SEND_BUTTON = 'button.msg-form__send-button'
 
-# --- Sales Navigator ---
+# --- Sales Navigator: list reading (outreach) ---
 SALES_NAV_LEAD_LIST_ITEM = 'a[data-anonymize="person-name"]'
 SALES_NAV_PAGINATION_NEXT = 'button[aria-label="Next"]'
 SALES_NAV_LEAD_COUNT = '.artdeco-pill__text'
+
+# --- Sales Navigator: search results + bulk list population ---
+# These appear on the /sales/search/people results page.
+# If LinkedIn updates their frontend, update these constants and re-run.
+SALES_NAV_SEARCH_RESULT_ROW = 'li[data-view-name="search-results-lead"]'
+SALES_NAV_SELECT_ALL_CHECKBOX = 'input[data-view-name="search-results-select-all-checkbox"]'
+SALES_NAV_SELECT_ALL_LABEL = 'label[data-view-name="search-results-select-all-label"]'
+SALES_NAV_SELECTED_COUNT = '[data-view-name="search-results-selected-count"]'
+SALES_NAV_SAVE_TO_LIST_BTN = 'button[data-view-name="search-results-save-to-list"]'
+# Fallback button text matches (LinkedIn sometimes uses text-based buttons)
+SALES_NAV_SAVE_TO_LIST_BTN_ALT = 'button:has-text("Save to list")'
+SALES_NAV_LIST_MODAL = '[data-view-name="save-to-list-modal"]'
+SALES_NAV_LIST_SEARCH_INPUT = '[data-view-name="save-to-list-search-input"]'
+SALES_NAV_LIST_OPTION = '[data-view-name="save-to-list-option"]'
+SALES_NAV_LIST_SAVE_BTN = 'button[data-view-name="save-to-list-save-button"]'
+SALES_NAV_LIST_SAVE_BTN_ALT = 'button:has-text("Save")'
+SALES_NAV_SEARCH_TOTAL_COUNT = '[data-view-name="search-results-total-count"]'
+SALES_NAV_NO_RESULTS = '[data-view-name="search-results-no-results"]'
 
 # --- Activity / Posts ---
 ACTIVITY_LINK = 'a[href*="/recent-activity/"]'
