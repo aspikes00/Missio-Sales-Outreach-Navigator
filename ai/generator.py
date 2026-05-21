@@ -31,7 +31,9 @@ class MessageGenerator:
             cta_url=brand.cta_url,
             cta_type=brand.cta_type,
             brand_name=brand.name,
+            brand_description=brand.description,
             brand_value_prop=brand.value_prop,
+            brand_voice_notes=brand.voice_notes,
             prior_messages=prior_messages,
         )
 

@@ -1,0 +1,11 @@
+STRUCTURE: Faith/leadership acknowledgment → specific 5-word company momentum hook pulled from their profile → soft reason to connect. Zero pitch. Hard limit: 300 characters.
+
+EXEMPLAR (Claude must write a fresh version using real profile data — do not copy this):
+Hi {first_name} — always great connecting with other believers in marketing leadership. I run Missio, built on the idea faith and work aren't separate things. {specific company momentum hook}. Worth connecting.
+
+KEY RULES:
+- Open with the faith + leadership acknowledgment — this is the trust anchor
+- The company hook must be something SPECIFIC from their LinkedIn (a recent post, expansion news, new role, product launch, team growth) — never generic
+- No pitch, no ask, no mention of what Missio does beyond the one-line identity
+- End softly — "Worth connecting" or "Thought it worth connecting" — never "I'd love to connect"
+- Count characters carefully — LinkedIn hard-enforces 300

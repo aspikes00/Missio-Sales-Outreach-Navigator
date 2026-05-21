@@ -38,6 +38,7 @@ class BrandConfig:
     name: str
     description: str
     value_prop: str
+    voice_notes: str     # brand-specific voice, forbidden phrases, pain language
     cta_type: str        # "discovery_call" | "free_trial"
     cta_url: str
     sales_nav_list_url: str
@@ -111,6 +112,7 @@ class Settings:
             name=b["name"],
             description=b.get("description", ""),
             value_prop=b.get("value_prop", ""),
+            voice_notes=b.get("voice_notes", ""),
             cta_type=o["cta_type"],
             cta_url=o["cta_url"],
             sales_nav_list_url=o.get("sales_nav_list_url", ""),

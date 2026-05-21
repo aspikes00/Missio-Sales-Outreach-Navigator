@@ -77,7 +77,9 @@ def build_prompt(
     cta_url: str,
     cta_type: str,
     brand_name: str,
+    brand_description: str,
     brand_value_prop: str,
+    brand_voice_notes: str,
     prior_messages: list[str] | None = None,
 ) -> str:
     char_limit = CHAR_LIMITS.get(stage, 1000)
@@ -94,7 +96,7 @@ def build_prompt(
             f"Recent post {i+1}: {post}" for i, post in enumerate(lead.recent_posts)
         )
     else:
-        posts_block = "Recent posts: (none available)"
+        posts_block = "Recent posts: (none available — use headline and title for personalization)"
 
     prior_block = ""
     if prior_messages:
@@ -103,15 +105,19 @@ def build_prompt(
             + "\n---\n".join(prior_messages)
         )
 
+    voice_block = f"\nVOICE & STYLE RULES FOR THIS BRAND:\n{brand_voice_notes}" if brand_voice_notes else ""
+
     return f"""\
 STAGE: {stage}
 INSTRUCTION: {stage_instruction}
 
-SENDER'S BRAND CONTEXT (for Claude's awareness — do not copy-paste this into the message):
+SENDER'S BRAND CONTEXT (awareness only — do not copy-paste into the message):
 Brand: {brand_name}
-What we do: {brand_value_prop}
+Who we are: {brand_description}
+What we produce: {brand_value_prop}
 CTA type: {cta_type}
 CTA URL: {cta_url}
+{voice_block}
 
 LEAD PROFILE:
 Name: {lead.full_name or lead.first_name}
@@ -124,7 +130,7 @@ LinkedIn headline: {lead.headline or "(none)"}
 About (excerpt): {lead.about_snippet or "(none)"}
 {posts_block}
 
-TONE & STRUCTURE GUIDE (your message should follow this template's voice and shape):
+TONE & STRUCTURE GUIDE (follow this template's voice, structure, and key rules exactly):
 {template}
 {prior_block}
 

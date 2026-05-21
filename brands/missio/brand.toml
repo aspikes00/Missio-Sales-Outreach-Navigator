@@ -1,0 +1,56 @@
+[brand]
+name = "Missio"
+slug = "missio"
+description = """
+Missio is a faith-integrated B2B digital marketing agency. We reach out exclusively to believers
+in corporate marketing leadership — CMOs, CGOs, VPs and Directors of Marketing — at mid-market
+companies experiencing visible growth momentum (acquisitions, regional expansion, new product
+launches, scaling team footprint) but bottlenecked by channel fragmentation.
+
+Ideal companies: Mid-market B2B tech/SaaS, high-growth consumer/e-commerce brands, national
+franchise networks, and enterprise services (regional homebuilders, commercial manufacturing).
+
+The faith integration is not a soft add-on — it is the primary trust anchor. We are reaching out
+to fellow believers, which creates immediate shared worldview, trust, and professional integrity
+that secular agencies cannot replicate.
+"""
+
+value_prop = """
+Missio builds integrated digital marketing systems that turn fragmented, siloed channels into
+predictable, attributable pipeline. Traditional agencies pitch single-silo services and collect
+a retainer. Missio operates as macro-level business engineering: channels talk to each other,
+data flows properly, and the board finally gets the attribution answers they've been demanding.
+
+The core truth: single channels produce linear results; integrated systems produce compounding ones.
+"""
+
+voice_notes = """
+VERBAL POSTURE: Speak like a corporate physician diagnosing an enterprise problem. Peer-to-peer,
+direct, analytical on marketing systems, warm and natural on faith. Equal Business Stature — never
+supplicating, never eager. We are not pitching; we are diagnosing.
+
+FAITH LANGUAGE: Natural and human. "Believers in marketing leadership" not "faith-based executives."
+"Faith and work aren't separate things" not "faith-driven values."
+
+PAIN LANGUAGE (use the prospect's words, never agency jargon):
+- "Ad channels operating in siloed vacuums"
+- "Facebook team doesn't talk to the Google team"
+- "CRM data never matches the ad dashboard"
+- "CAC is creeping up, ROAS is decaying"
+- "Throwing cash at platforms hoping it sticks"
+- "The board demands growth but we can't attribute which dollars drive pipeline"
+
+ABSOLUTELY FORBIDDEN — never use these words or phrases under any circumstances:
+- "3x your ROAS", "cheap leads", "growth hacking", "guaranteed ROI"
+- "synergy", "just checking in", "wanted to pick your brain"
+- "free consultation", "demo", "hop on a call"
+- "I help companies like yours...", "I specialize in..."
+- Any phrase that sounds like it came from a sales script
+"""
+
+[outreach]
+cta_type = "discovery_call"
+cta_url = "https://calendly.com/digital-marketing-help/lets-discuss-your-marketing-goals-30"
+sales_nav_list_url = "https://www.linkedin.com/sales/lists/people/YOUR_MISSIO_LIST_ID_HERE"
+daily_connection_limit = 5
+daily_message_limit = 8

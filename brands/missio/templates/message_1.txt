@@ -1,0 +1,15 @@
+STRUCTURE: Warm open → specific acknowledgment of their company's growth moment → ONE diagnostic question about channel fragmentation or data attribution → Sandler mutual-fit disclaimer. Conversational, not clinical.
+
+EXEMPLAR (Claude must write a fresh version using real profile data — do not copy this):
+{first_name}, appreciate you connecting.
+
+Quick question — with {company_name}'s {growth signal from their profile}, are your ad channels actually talking to each other, or does your paid social team operate in a completely different universe than your search team?
+
+A lot of marketing leaders at companies like yours tell me their CRM data never matches the ad dashboard — attribution is a mess, CAC keeps creeping up, and the board wants pipeline answers nobody can give them confidently. Not sure if any of that resonates at {company_name}.
+
+KEY RULES:
+- Reference something SPECIFIC from their company's recent momentum (acquisition, expansion, new product, team growth) — this proves you actually looked
+- The diagnostic question must be about data silos, channel fragmentation, or attribution — not about their budget or goals
+- End with Sandler mutual-fit language: "not sure if this resonates" or "may not be relevant at all"
+- No mention of Missio's services, no value prop, no ask
+- Tone: peer asking a genuine question, not a vendor probing for pain
