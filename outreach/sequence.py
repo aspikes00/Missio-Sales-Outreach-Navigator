@@ -169,6 +169,14 @@ class SequenceOrchestrator:
         except Exception as e:
             logger.warning("Profile refresh failed for %s: %s", lead.linkedin_url, e)
 
+        # After scraping, the browser may be on the resolved regular /in/ URL — use it for actions
+        _current = browser.page.url
+        action_url = (
+            _current.split("?")[0]
+            if "/in/" in _current and "/sales/" not in _current
+            else lead.linkedin_url
+        )
+
         message = self._generator.generate(
             lead=lead,
             stage=stage_name,
@@ -191,11 +199,24 @@ class SequenceOrchestrator:
         try:
             sent = False
             if stage_name == "connection_note":
-                sent = send_connection_request(browser.page, lead.linkedin_url, message, self._humanizer)
+                sent = send_connection_request(browser.page, action_url, message, self._humanizer)
+                if not sent:
+                    # Check if we hit a Pending or Message button — manual outreach was done earlier
+                    from linkedin import selectors as _sel
+                    if browser.page.query_selector(_sel.PENDING_BUTTON):
+                        with self._db.transaction() as conn:
+                            update_lead_status(conn, lead.id, "connection_pending")
+                        logger.info("Already-pending invite detected for %s — marked connection_pending.", lead.full_name or lead.linkedin_url)
+                        return True
+                    if browser.page.query_selector(_sel.MESSAGE_BUTTON):
+                        with self._db.transaction() as conn:
+                            update_lead_status(conn, lead.id, "connected")
+                        logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
+                        return True
                 if sent:
                     result.connections_sent += 1
             else:
-                sent = send_direct_message(browser.page, lead.linkedin_url, message, self._humanizer)
+                sent = send_direct_message(browser.page, action_url, message, self._humanizer)
                 if sent:
                     result.messages_sent += 1
 
@@ -242,7 +263,9 @@ class SequenceOrchestrator:
 
         for lead in pending:
             try:
-                accepted = check_connection_accepted(browser.page, lead.linkedin_url)
+                from linkedin.scraper import _resolve_linkedin_url
+                check_url = _resolve_linkedin_url(browser.page, lead.linkedin_url)
+                accepted = check_connection_accepted(browser.page, check_url)
                 if accepted:
                     with self._db.transaction() as conn:
                         update_lead_status(conn, lead.id, "connected")
