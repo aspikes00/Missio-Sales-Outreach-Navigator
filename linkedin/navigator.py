@@ -73,24 +73,42 @@ def sync_leads_from_list(page: Page, list_url: str) -> list[ListLead]:
 
         logger.info("Total leads read so far: %d", len(leads))
 
-        # Try pagination button first
-        next_btn = page.query_selector(sel.SALES_NAV_PAGINATION_NEXT)
-        if next_btn and not next_btn.is_disabled():
+        # Scroll down so pagination controls are visible
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        time.sleep(random.uniform(1.0, 1.5))
+
+        # Log all buttons for debugging (first page only)
+        if len(leads) <= 25:
+            all_btns = page.query_selector_all("button")
+            btn_labels = []
+            for b in all_btns:
+                label = b.get_attribute("aria-label") or b.inner_text().strip()
+                if label:
+                    btn_labels.append(label[:60])
+            logger.info("Buttons on page: %s", btn_labels)
+
+        # Try several possible Next button selectors
+        next_btn = None
+        for next_sel in sel.SALES_NAV_PAGINATION_NEXT_CANDIDATES:
+            candidate = page.query_selector(next_sel)
+            if candidate and not candidate.is_disabled():
+                next_btn = candidate
+                logger.info("Found Next button via selector: %s", next_sel)
+                break
+
+        if next_btn:
             next_btn.scroll_into_view_if_needed()
-            time.sleep(random.uniform(0.5, 1.0))
+            time.sleep(random.uniform(0.8, 1.5))
             next_btn.click()
-            time.sleep(random.uniform(2.5, 4.0))
+            logger.info("Clicked Next — loading next page...")
+            time.sleep(random.uniform(3.0, 4.5))
             stall_rounds = 0
             continue
 
-        # No pagination button — try infinite scroll
-        count_before = len(seen_urls)
+        # No pagination button found — try infinite scroll
         page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(random.uniform(2.0, 3.0))
-        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-        time.sleep(random.uniform(1.5, 2.5))
 
-        # Check if new cards appeared after scroll
         new_cards = page.query_selector_all(sel.SALES_NAV_LEAD_CARD)
         new_count = 0
         for card in new_cards:

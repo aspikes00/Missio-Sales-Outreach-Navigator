@@ -43,6 +43,14 @@ SALES_NAV_CARD_TITLE        = '[data-anonymize="job-title"]'
 SALES_NAV_CARD_COMPANY      = '[data-anonymize="company-name"]'
 SALES_NAV_CARD_LOCATION     = '[data-anonymize="person-location"]'
 SALES_NAV_PAGINATION_NEXT   = 'button[aria-label="Next"]'
+SALES_NAV_PAGINATION_NEXT_CANDIDATES = [
+    'button[aria-label="Next"]',
+    'button[aria-label="Next page"]',
+    'button[aria-label="next"]',
+    'li.artdeco-pagination__button--next button',
+    'button.artdeco-pagination__button--next',
+    '[data-view-name="list-pagination-next-button"]',
+]
 SALES_NAV_LEAD_COUNT        = '.artdeco-pill__text'
 
 # --- Sales Navigator: search results + bulk list population ---
