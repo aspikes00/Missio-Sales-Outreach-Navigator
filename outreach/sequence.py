@@ -79,7 +79,7 @@ class SequenceOrchestrator:
         result = SessionResult(brand=self._brand.slug)
         today = date.today().isoformat()
 
-        if not self._within_business_hours():
+        if not self._dry_run and not self._within_business_hours():
             logger.info("Outside business hours. Exiting.")
             result.halt_reason = "outside_business_hours"
             return result
