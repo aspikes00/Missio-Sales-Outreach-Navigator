@@ -23,7 +23,8 @@ echo "======================================="
 echo "   Missio LinkedIn Outreach Agent"
 echo "======================================="
 echo ""
-echo "  1)  Fill my Sales Nav list           (adds ~200 leads from your search)"
+echo "  0)  Import my Sales Nav list          (first-time setup — loads your existing list)"
+echo "  1)  Fill my Sales Nav list           (adds ~200 more leads from your search)"
 echo "  2)  Preview today's messages         (dry run — nothing sent)"
 echo "  3)  Run today's outreach             (sends connections + messages)"
 echo ""
@@ -44,6 +45,13 @@ read -r choice
 echo ""
 
 case "$choice" in
+
+  0)
+    echo "Opening your Sales Navigator list and importing leads..."
+    echo "(Browser will open — this reads your existing list, nothing is sent.)"
+    echo ""
+    $PYTHON main.py sync-list --brand missio
+    ;;
 
   1)
     echo "Opening browser to fill your Sales Navigator list..."

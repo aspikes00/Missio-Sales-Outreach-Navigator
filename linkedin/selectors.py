@@ -35,10 +35,15 @@ CONNECT_SEND_WITHOUT_NOTE = 'button[aria-label="Send without a note"]'
 MESSAGE_COMPOSE_TEXTAREA = '.msg-form__contenteditable'
 MESSAGE_SEND_BUTTON = 'button.msg-form__send-button'
 
-# --- Sales Navigator: list reading (outreach) ---
-SALES_NAV_LEAD_LIST_ITEM = 'a[data-anonymize="person-name"]'
-SALES_NAV_PAGINATION_NEXT = 'button[aria-label="Next"]'
-SALES_NAV_LEAD_COUNT = '.artdeco-pill__text'
+# --- Sales Navigator: saved list reading ---
+SALES_NAV_LEAD_LIST_ITEM    = 'a[data-anonymize="person-name"]'
+SALES_NAV_LEAD_CARD         = 'li[data-view-name="people-list-lead-item"]'
+SALES_NAV_CARD_NAME         = '[data-anonymize="person-name"]'
+SALES_NAV_CARD_TITLE        = '[data-anonymize="job-title"]'
+SALES_NAV_CARD_COMPANY      = '[data-anonymize="company-name"]'
+SALES_NAV_CARD_LOCATION     = '[data-anonymize="person-location"]'
+SALES_NAV_PAGINATION_NEXT   = 'button[aria-label="Next"]'
+SALES_NAV_LEAD_COUNT        = '.artdeco-pill__text'
 
 # --- Sales Navigator: search results + bulk list population ---
 # These appear on the /sales/search/people results page.

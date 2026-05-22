@@ -169,6 +169,67 @@ def mark_dnc(url: str):
     click.echo(f"Marked {lead.full_name or url} as do-not-contact.")
 
 
+@cli.command("sync-list")
+@click.option("--brand", required=True, help="Brand slug.")
+def sync_list(brand: str):
+    """
+    Read your Sales Navigator saved list and import any new leads into the database.
+
+    Run this once to load your existing list, then again whenever you add more
+    leads via populate-list. No CSV export needed.
+    """
+    settings, db = _load_common()
+    brand_config = settings.load_brand(brand)
+
+    if not brand_config.sales_nav_list_url or "YOUR_MISSIO" in brand_config.sales_nav_list_url:
+        raise click.UsageError(
+            "No list URL configured. Set sales_nav_list_url in brands/missio/brand.toml."
+        )
+
+    click.echo(f"Opening your Sales Navigator list for: {brand_config.name}")
+    click.echo("Reading lead cards... (browser will open)")
+
+    from linkedin.auth import ensure_authenticated
+    from linkedin.browser import BrowserManager
+    from linkedin.navigator import sync_leads_from_list
+    from database.queries import insert_lead, url_exists
+    from database.models import Lead
+
+    with BrowserManager(settings) as browser:
+        ensure_authenticated(
+            browser.page, settings.linkedin_email, settings.linkedin_password
+        )
+        list_leads = sync_leads_from_list(browser.page, brand_config.sales_nav_list_url)
+
+    added = skipped = 0
+    for ll in list_leads:
+        with db.transaction() as conn:
+            if url_exists(conn, ll.linkedin_url):
+                skipped += 1
+                continue
+            lead = Lead(
+                id=None,
+                linkedin_url=ll.linkedin_url,
+                brand=brand,
+                first_name=ll.first_name,
+                last_name=ll.last_name,
+                full_name=ll.full_name,
+                title=ll.title,
+                company_name=ll.company_name,
+                location=ll.location,
+                source_list=brand_config.sales_nav_list_name or "Sales Navigator",
+            )
+            insert_lead(conn, lead)
+            added += 1
+
+    click.echo(f"\nDone.")
+    click.echo(f"  New leads imported: {added}")
+    click.echo(f"  Already in DB:      {skipped}")
+    click.echo(f"  Total in list:      {len(list_leads)}")
+    if added > 0:
+        click.echo(f"\n  Run option 2 (preview) or option 3 (go live) next.")
+
+
 @cli.command("populate-list")
 @click.option("--brand", required=True, help="Brand slug (reads search URL and list name from brand.toml).")
 @click.option("--search-url", default=None,
