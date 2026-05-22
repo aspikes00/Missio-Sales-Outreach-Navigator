@@ -40,7 +40,22 @@ def login(page: Page, email: str, password: str) -> bool:
         time.sleep(random.uniform(0.8, 1.8))
 
         page.click(sel.LOGIN_SUBMIT_BUTTON)
-        page.wait_for_url("**/feed/**", timeout=20000)
+
+        # Wait briefly then check if 2FA/verification is required
+        time.sleep(3)
+        current_url = page.url
+        if any(x in current_url for x in ("/checkpoint/", "/challenge/", "/two-step/")):
+            print("\n" + "="*60)
+            print("  LinkedIn is asking for a verification code.")
+            print("  Check your phone/email for the code, enter it in")
+            print("  the browser window, then click 'Sign in'.")
+            print("  You have 2 minutes.")
+            print("="*60 + "\n")
+            # Wait up to 2 minutes for the user to complete 2FA
+            page.wait_for_url("**/feed/**", timeout=120000)
+        else:
+            page.wait_for_url("**/feed/**", timeout=20000)
+
         logger.info("Login successful.")
         return True
 
