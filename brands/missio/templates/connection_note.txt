@@ -1,11 +1,11 @@
-STRUCTURE: Faith/leadership acknowledgment → specific 5-word company momentum hook pulled from their profile → soft reason to connect. Zero pitch. Hard limit: 300 characters.
+STRUCTURE: Peer-to-peer opener (agency owner) → shared identity (believers in marketing) → one specific hook from their profile → soft close. Zero pitch. Do NOT name the brand. Hard limit: 300 characters.
 
-EXEMPLAR (Claude must write a fresh version using real profile data — do not copy this):
-Hi {first_name} — always great connecting with other believers in marketing leadership. I run Missio, built on the idea faith and work aren't separate things. {specific company momentum hook}. Worth connecting.
+EXEMPLAR (write a fresh version using real profile data — do not copy this):
+Hi {first_name} — I'm an agency owner focused on faith-integrated marketing. Looks like we're both believers working in the marketing space — {one-line specific hook from their profile or role}. Thought it'd be great to connect.
 
 KEY RULES:
-- Open with the faith + leadership acknowledgment — this is the trust anchor
-- The company hook must be something SPECIFIC from their LinkedIn (a recent post, expansion news, new role, product launch, team growth) — never generic
-- No pitch, no ask, no mention of what Missio does beyond the one-line identity
-- End softly — "Worth connecting" or "Thought it worth connecting" — never "I'd love to connect"
-- Count characters carefully — LinkedIn hard-enforces 300
+- NEVER open with or mention "Missio" — lead with "I'm an agency owner" or "I run an agency"
+- The shared identity hook is "believers working in marketing" — this is what makes them stop
+- The specific detail must be real (a post, their headline, company, recent role change) — if no profile data is available, skip the hook and go straight to the close
+- Close softly: "Thought it'd be great to connect" or "Thought it worth connecting" — never "I'd love to"
+- 300 character hard limit — count carefully, LinkedIn rejects anything over

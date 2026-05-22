@@ -28,11 +28,40 @@ class ScrapedProfile:
     connection_degree: str = ""
 
 
+def _resolve_linkedin_url(page: Page, url: str) -> str:
+    """If url is a Sales Navigator lead URL, find and return the regular linkedin.com/in/ URL."""
+    if "/sales/lead/" not in url:
+        return url
+
+    page.goto(url, wait_until="domcontentloaded", timeout=20000)
+    time.sleep(random.uniform(2.0, 3.5))
+
+    # Sales Nav lead pages have a link to the regular profile
+    for selector in [
+        'a[data-anonymize="person-name"][href*="/in/"]',
+        'a[href*="linkedin.com/in/"]',
+        'a[href^="/in/"]',
+    ]:
+        el = page.query_selector(selector)
+        if el:
+            href = el.get_attribute("href") or ""
+            if href.startswith("/"):
+                href = "https://www.linkedin.com" + href
+            if "/in/" in href:
+                logger.info("Resolved Sales Nav URL → %s", href)
+                return href
+
+    logger.warning("Could not resolve Sales Nav URL to a regular profile: %s", url)
+    return url
+
+
 def scrape_profile(page: Page, profile_url: str) -> Optional[ScrapedProfile]:
     logger.info("Scraping profile: %s", profile_url)
 
-    if page.url != profile_url:
-        page.goto(profile_url, wait_until="domcontentloaded", timeout=20000)
+    resolved_url = _resolve_linkedin_url(page, profile_url)
+
+    if page.url != resolved_url:
+        page.goto(resolved_url, wait_until="domcontentloaded", timeout=20000)
         time.sleep(random.uniform(2.0, 4.0))
 
     profile = ScrapedProfile(linkedin_url=profile_url)
