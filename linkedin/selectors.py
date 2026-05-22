@@ -1,3 +1,4 @@
+from __future__ import annotations
 # All LinkedIn CSS selectors isolated here.
 # When LinkedIn updates their frontend, only this file needs updating.
 

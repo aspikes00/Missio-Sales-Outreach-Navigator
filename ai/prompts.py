@@ -1,3 +1,4 @@
+from __future__ import annotations
 from database.models import Lead
 
 SYSTEM_PROMPT = """\
