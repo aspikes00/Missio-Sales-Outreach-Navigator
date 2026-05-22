@@ -13,8 +13,10 @@ from database.queries import (
 logger = logging.getLogger(__name__)
 
 WARMUP_SCHEDULE = [
-    (3, 3),
-    (7, 5),
+    (2, 5),   # Days 1-2:  5 actions/day
+    (4, 10),  # Days 3-4: 10 actions/day
+    (6, 15),  # Days 5-6: 15 actions/day
+    (7, 20),  # Day 7:    20 actions/day → ramp complete
 ]
 
 

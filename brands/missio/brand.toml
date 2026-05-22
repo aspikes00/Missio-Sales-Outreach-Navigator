@@ -63,5 +63,5 @@ sales_nav_list_name = "YOUR LIST NAME HERE"
 # (used by: python main.py populate-list --brand missio)
 sales_nav_search_url = "https://www.linkedin.com/sales/search/people?YOUR_SEARCH_PARAMS_HERE"
 
-daily_connection_limit = 5
-daily_message_limit = 8
+daily_connection_limit = 20
+daily_message_limit = 20
