@@ -50,6 +50,7 @@ SALES_NAV_PAGINATION_NEXT_CANDIDATES = [
     'li.artdeco-pagination__button--next button',
     'button.artdeco-pagination__button--next',
     '[data-view-name="list-pagination-next-button"]',
+    'button:has-text("Next")',
 ]
 SALES_NAV_LEAD_COUNT        = '.artdeco-pill__text'
 
