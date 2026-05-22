@@ -24,6 +24,18 @@ PROFILE_ABOUT = '#about ~ .display-flex .inline-show-more-text'
 CONNECT_BUTTON = 'button[aria-label^="Connect"]'
 MESSAGE_BUTTON = 'button[aria-label^="Message"]'
 PENDING_BUTTON = 'button[aria-label^="Pending"]'
+# Broader fallbacks for when LinkedIn changes button aria-labels
+ALREADY_CONNECTED_CANDIDATES = [
+    'button[aria-label^="Message"]',
+    'button:has-text("Message")',
+]
+ALREADY_PENDING_CANDIDATES = [
+    'button[aria-label^="Pending"]',
+    'button[aria-label*="Invitation sent"]',
+    'button[aria-label*="pending"]',
+    'button:has-text("Pending")',
+    'button:has-text("Sent")',
+]
 
 # --- Connect modal ---
 CONNECT_ADD_NOTE_BUTTON = 'button[aria-label="Add a note"]'

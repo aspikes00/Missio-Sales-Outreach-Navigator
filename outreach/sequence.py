@@ -203,16 +203,22 @@ class SequenceOrchestrator:
                 if not sent:
                     # Check if we hit a Pending or Message button — manual outreach was done earlier
                     from linkedin import selectors as _sel
-                    if browser.page.query_selector(_sel.PENDING_BUTTON):
-                        with self._db.transaction() as conn:
-                            update_lead_status(conn, lead.id, "connection_pending")
-                        logger.info("Already-pending invite detected for %s — marked connection_pending.", lead.full_name or lead.linkedin_url)
-                        return True
-                    if browser.page.query_selector(_sel.MESSAGE_BUTTON):
-                        with self._db.transaction() as conn:
-                            update_lead_status(conn, lead.id, "connected")
-                        logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
-                        return True
+                    for _btn_sel in _sel.ALREADY_PENDING_CANDIDATES:
+                        if browser.page.query_selector(_btn_sel):
+                            with self._db.transaction() as conn:
+                                update_lead_status(conn, lead.id, "connection_pending")
+                            logger.info("Pending invite detected for %s — marked connection_pending.", lead.full_name or lead.linkedin_url)
+                            return True
+                    for _btn_sel in _sel.ALREADY_CONNECTED_CANDIDATES:
+                        if browser.page.query_selector(_btn_sel):
+                            with self._db.transaction() as conn:
+                                update_lead_status(conn, lead.id, "connected")
+                            logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
+                            return True
+                    # Log what buttons are visible so we can tune selectors
+                    _btns = browser.page.query_selector_all("button")
+                    _labels = [b.get_attribute("aria-label") or b.inner_text().strip()[:40] for b in _btns if b.get_attribute("aria-label") or b.inner_text().strip()]
+                    logger.warning("No Connect/Pending/Message button found for %s. Visible buttons: %s", lead.full_name, _labels[:15])
                 if sent:
                     result.connections_sent += 1
             else:

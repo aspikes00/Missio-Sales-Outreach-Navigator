@@ -102,6 +102,7 @@ def scrape_profile(page: Page, profile_url: str) -> Optional[ScrapedProfile]:
 
 def _scrape_recent_posts(page: Page, profile_url: str) -> list[str]:
     posts = []
+    navigated = False
     try:
         activity_link = page.query_selector(sel.ACTIVITY_LINK)
         if not activity_link:
@@ -115,6 +116,7 @@ def _scrape_recent_posts(page: Page, profile_url: str) -> list[str]:
             activity_url = "https://www.linkedin.com" + activity_url
 
         page.goto(activity_url, wait_until="domcontentloaded", timeout=15000)
+        navigated = True
         time.sleep(random.uniform(2.0, 3.5))
 
         post_elements = page.query_selector_all(sel.POST_TEXT)
@@ -126,8 +128,9 @@ def _scrape_recent_posts(page: Page, profile_url: str) -> list[str]:
     except Exception as e:
         logger.debug("Could not scrape recent posts: %s", e)
     finally:
-        page.go_back()
-        time.sleep(random.uniform(1.0, 2.0))
+        if navigated:
+            page.go_back()
+            time.sleep(random.uniform(1.0, 2.0))
 
     return posts
 
