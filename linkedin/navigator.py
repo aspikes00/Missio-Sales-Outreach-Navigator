@@ -81,15 +81,9 @@ def sync_leads_from_list(page: Page, list_url: str) -> list[ListLead]:
         next_btn = None
         for next_sel in sel.SALES_NAV_PAGINATION_NEXT_CANDIDATES:
             candidate = page.query_selector(next_sel)
-            if candidate:
-                disabled = candidate.is_disabled()
-                logger.info("Selector '%s': found=%s disabled=%s", next_sel, True, disabled)
-                if not disabled:
-                    next_btn = candidate
-                    logger.info("Using Next button via selector: %s", next_sel)
-                    break
-            else:
-                logger.info("Selector '%s': not found", next_sel)
+            if candidate and not candidate.is_disabled():
+                next_btn = candidate
+                break
 
         if next_btn:
             next_btn.scroll_into_view_if_needed()
