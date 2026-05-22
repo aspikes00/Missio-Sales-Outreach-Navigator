@@ -13,6 +13,7 @@ from database.models import Lead
 from database.queries import (
     get_active_lead_urls_for_brand,
     get_lead_by_url,
+    get_monthly_inmails_sent,
     get_or_create_daily_stats,
     get_outreach_history,
     increment_daily_stat,
@@ -23,7 +24,7 @@ from database.queries import (
 )
 from linkedin.auth import ensure_authenticated
 from linkedin.browser import BrowserManager
-from linkedin.messenger import MessengerError, scan_inbox_for_replies, send_connection_request, send_direct_message
+from linkedin.messenger import MessengerError, scan_inbox_for_replies, send_connection_request, send_direct_message, send_inmail
 from linkedin.scraper import check_connection_accepted, scrape_profile
 from outreach.scheduler import Scheduler
 from safety.humanizer import Humanizer
@@ -58,6 +59,7 @@ class SessionResult:
     halted_early: bool = False
     halt_reason: str = ""
     leads_processed: list[str] = field(default_factory=list)
+    inmails_sent: int = 0
 
 
 class SequenceOrchestrator:
@@ -182,6 +184,8 @@ class SequenceOrchestrator:
             print(f"{'='*60}")
             print(message)
             print(f"{'='*60}\n")
+            if stage_name == "connection_note" and self._brand.daily_inmail_limit > 0 and (lead.recent_post_1 or lead.headline):
+                self._try_send_inmail(browser, lead, today, result)
             return True
 
         try:
@@ -202,6 +206,16 @@ class SequenceOrchestrator:
                     stat_field = "connections_sent" if stage_name == "connection_note" else "messages_sent"
                     increment_daily_stat(conn, today, self._brand.slug, stat_field)
                 result.leads_processed.append(lead.linkedin_url)
+
+                # Send InMail alongside the connection request if lead has personalization data
+                if (
+                    stage_name == "connection_note"
+                    and sent
+                    and self._brand.daily_inmail_limit > 0
+                    and (lead.recent_post_1 or lead.headline)
+                ):
+                    self._try_send_inmail(browser, lead, today, result)
+
                 return True
             return False
 
@@ -233,7 +247,7 @@ class SequenceOrchestrator:
                     with self._db.transaction() as conn:
                         update_lead_status(conn, lead.id, "connected")
                     logger.info("%s accepted the connection.", lead.full_name or lead.first_name)
-                    self._humanizer.human_delay(2, 5)
+                    time.sleep(random.uniform(2, 5))
             except Exception as e:
                 logger.warning("Could not check pending for %s: %s", lead.linkedin_url, e)
 
@@ -249,6 +263,50 @@ class SequenceOrchestrator:
         with self._db.transaction() as conn:
             history = get_outreach_history(conn, lead_id)
         return [entry.message_text for entry in history]
+
+    def _try_send_inmail(self, browser, lead: Lead, today: str, result: SessionResult):
+        if "/sales/lead/" not in lead.linkedin_url:
+            return
+
+        year_month = today[:7]
+        with self._db.transaction() as conn:
+            monthly_used = get_monthly_inmails_sent(conn, self._brand.slug, year_month)
+
+        if monthly_used >= self._brand.monthly_inmail_budget:
+            logger.info("Monthly InMail budget exhausted (%d/%d).", monthly_used, self._brand.monthly_inmail_budget)
+            return
+
+        with self._db.transaction() as conn:
+            stats = get_or_create_daily_stats(conn, today, self._brand.slug)
+        if stats.inmails_sent >= self._brand.daily_inmail_limit:
+            logger.info("Daily InMail limit reached (%d).", self._brand.daily_inmail_limit)
+            return
+
+        inmail_template = self._brand.load_template("inmail.txt")
+        history = self._get_prior_messages(lead.id)
+
+        if self._dry_run:
+            subject, body = self._generator.generate_inmail(lead, inmail_template, self._brand, history)
+            print(f"\n{'='*60}")
+            print(f"[DRY RUN] INMAIL to {lead.full_name or lead.first_name}")
+            print(f"SUBJECT: {subject}")
+            print(f"{'='*60}")
+            print(body)
+            print(f"{'='*60}\n")
+            return
+
+        subject, body = self._generator.generate_inmail(lead, inmail_template, self._brand, history)
+
+        try:
+            sent = send_inmail(browser.page, lead.linkedin_url, subject, body, self._humanizer)
+            if sent:
+                with self._db.transaction() as conn:
+                    insert_outreach_log(conn, lead.id, self._brand.slug, "inmail", f"SUBJECT: {subject}\n\n{body}")
+                    increment_daily_stat(conn, today, self._brand.slug, "inmails_sent")
+                result.inmails_sent += 1
+                logger.info("InMail sent to %s (%d/%d monthly).", lead.full_name, monthly_used + 1, self._brand.monthly_inmail_budget)
+        except Exception as e:
+            logger.warning("InMail failed for %s: %s", lead.linkedin_url, e)
 
     def _within_business_hours(self) -> bool:
         tz = pytz.timezone(self._settings.timezone)

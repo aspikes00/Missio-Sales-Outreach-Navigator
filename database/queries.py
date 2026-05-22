@@ -179,7 +179,7 @@ def get_all_brands_daily_stats(conn: sqlite3.Connection, today: str) -> list[Dai
 def increment_daily_stat(conn: sqlite3.Connection, today: str, brand: str, field: str, amount: int = 1):
     allowed = {
         "connections_sent", "messages_sent", "replies_received",
-        "bookings_detected", "session_duration_mins", "errors_encountered",
+        "bookings_detected", "session_duration_mins", "errors_encountered", "inmails_sent",
     }
     if field not in allowed:
         raise ValueError(f"Unknown stat field: {field}")
@@ -234,3 +234,12 @@ def get_active_lead_urls_for_brand(conn: sqlite3.Connection, brand: str) -> list
 def url_exists(conn: sqlite3.Connection, linkedin_url: str) -> bool:
     row = conn.execute("SELECT 1 FROM leads WHERE linkedin_url = ?", (linkedin_url,)).fetchone()
     return row is not None
+
+
+def get_monthly_inmails_sent(conn: sqlite3.Connection, brand: str, year_month: str) -> int:
+    """year_month format: '2026-05'"""
+    row = conn.execute(
+        "SELECT COALESCE(SUM(inmails_sent), 0) FROM daily_stats WHERE date LIKE ? AND brand = ?",
+        (year_month + "%", brand),
+    ).fetchone()
+    return row[0] if row else 0

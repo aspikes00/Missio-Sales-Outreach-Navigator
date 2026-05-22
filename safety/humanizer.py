@@ -13,9 +13,9 @@ class Humanizer:
         self._min_delay = min_delay
         self._max_delay = max_delay
 
-    def type_text(self, page: Page, selector: str, text: str):
+    def type_text(self, page: Page, selector, text: str, element=None):
         """Type text character-by-character with realistic human timing."""
-        el = page.wait_for_selector(selector, timeout=10000)
+        el = element if element is not None else page.wait_for_selector(selector, timeout=10000)
         el.click()
         time.sleep(random.uniform(0.3, 0.8))
 

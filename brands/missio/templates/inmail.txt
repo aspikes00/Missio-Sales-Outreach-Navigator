@@ -1,0 +1,20 @@
+STRUCTURE: Subject line + peer opener → specific hook from their profile → one pain-point question → mutual fit close. No Calendly link in InMail — goal is a reply, not a booking.
+
+FORMAT — return your response exactly like this:
+SUBJECT: [subject line here]
+
+[body text here]
+
+SUBJECT RULES:
+- Max 60 characters
+- Must reference something specific from their profile (a post topic, their role, company context)
+- NOT "Quick question" or "Following up" — those are ignored
+- Conversational, curiosity-inducing, peer-to-peer tone
+
+BODY RULES:
+- Open: "I'm an agency owner focused on faith-integrated marketing" (peer framing, no brand name first)
+- Reference the specific thing from their profile that caught your eye
+- One pain-point question relevant to their role — channels, attribution, integration, data silos
+- Mutual fit close: "Not sure if that resonates for [company] — figured it was worth a note"
+- Max 600 characters in body
+- NO Calendly link, no "book a call", no ask for a meeting — just prompt a reply

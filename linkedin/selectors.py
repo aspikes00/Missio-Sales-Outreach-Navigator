@@ -83,3 +83,21 @@ INBOX_UNREAD_INDICATOR = '.msg-conversation-listitem__unread-count'
 # --- Rate limit / warning banners ---
 RATE_LIMIT_BANNER = '[aria-label*="weekly invitation limit"]'
 GENERIC_ERROR_BANNER = '.ip-fuse-limit-alert'
+
+# --- Sales Navigator: InMail compose ---
+# Selectors for sending InMail from a Sales Nav lead page (/sales/lead/...)
+SALES_NAV_INMAIL_BTN_CANDIDATES = [
+    'button[data-view-name="lead-actions-top-card-inmail-button"]',
+    'button[aria-label*="InMail"]',
+    'button[aria-label*="Message"]',
+    'button:has-text("Message")',
+    'button:has-text("InMail")',
+]
+SALES_NAV_INMAIL_SUBJECT = 'input[name="subject"], input[placeholder*="ubject"], input[aria-label*="ubject"]'
+SALES_NAV_INMAIL_BODY_CANDIDATES = [
+    'textarea[name="body"]',
+    'textarea[aria-label*="ody"]',
+    '.msg-form__contenteditable',
+    'div[contenteditable="true"]',
+]
+SALES_NAV_INMAIL_SEND_BTN = 'button[aria-label*="end InMail"], button[type="submit"]:has-text("Send")'

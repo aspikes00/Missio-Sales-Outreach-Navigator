@@ -54,6 +54,46 @@ class MessageGenerator:
         logger.info("Generated %s message for %s (%d chars)", stage, lead.full_name, len(message))
         return message.strip()
 
+    def generate_inmail(
+        self,
+        lead: Lead,
+        template: str,
+        brand: BrandConfig,
+        prior_messages: Optional[list[str]] = None,
+    ) -> tuple[str, str]:
+        """Returns (subject, body) tuple for a Sales Navigator InMail."""
+        prompt = build_prompt(
+            stage="inmail",
+            lead=lead,
+            template=template,
+            cta_url=brand.cta_url,
+            cta_type=brand.cta_type,
+            brand_name=brand.name,
+            brand_description=brand.description,
+            brand_value_prop=brand.value_prop,
+            brand_voice_notes=brand.voice_notes,
+            prior_messages=prior_messages,
+        )
+
+        raw = self._call_api(prompt)
+
+        # Parse SUBJECT: / body format
+        subject = ""
+        body = raw.strip()
+        lines = raw.strip().splitlines()
+        for i, line in enumerate(lines):
+            if line.upper().startswith("SUBJECT:"):
+                subject = line[8:].strip()[:60]
+                body = "\n".join(lines[i+1:]).strip()
+                break
+
+        if not subject:
+            subject = f"Fellow believer in {lead.title or 'marketing'}"
+
+        logger.info("Generated InMail for %s — subject: %s (%d chars), body: %d chars",
+                    lead.full_name, subject, len(subject), len(body))
+        return subject, body
+
     @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=2, max=30))
     def _call_api(self, user_prompt: str) -> str:
         response = self._client.messages.create(

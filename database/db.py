@@ -29,6 +29,7 @@ class Database:
             ("leads", "brand", "TEXT NOT NULL DEFAULT 'default'"),
             ("outreach_log", "brand", "TEXT NOT NULL DEFAULT 'default'"),
             ("daily_stats", "brand", "TEXT NOT NULL DEFAULT 'default'"),
+            ("daily_stats", "inmails_sent", "INTEGER DEFAULT 0"),
         ]
         with self.transaction() as conn:
             for table, column, col_def in migrations:

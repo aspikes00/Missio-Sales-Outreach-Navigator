@@ -65,3 +65,5 @@ sales_nav_search_url = "https://www.linkedin.com/sales/search/people?YOUR_SEARCH
 
 daily_connection_limit = 20
 daily_message_limit = 20
+daily_inmail_limit = 2
+monthly_inmail_budget = 50

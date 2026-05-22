@@ -73,6 +73,7 @@ class DailyStats:
     bookings_detected: int = 0
     session_duration_mins: int = 0
     errors_encountered: int = 0
+    inmails_sent: int = 0
 
     @property
     def total_sent(self) -> int:
@@ -82,6 +83,6 @@ class DailyStats:
     def from_row(cls, row: tuple) -> "DailyStats":
         cols = [
             "id", "date", "brand", "connections_sent", "messages_sent", "replies_received",
-            "bookings_detected", "session_duration_mins", "errors_encountered",
+            "bookings_detected", "session_duration_mins", "errors_encountered", "inmails_sent",
         ]
         return cls(**dict(zip(cols, row)))

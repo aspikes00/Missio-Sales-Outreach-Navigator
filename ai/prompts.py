@@ -25,6 +25,8 @@ CHAR_LIMITS = {
     "message_1": 1000,
     "message_2": 800,
     "message_3": 700,
+    "inmail_subject": 60,
+    "inmail_body": 600,
 }
 
 _CTA_INSTRUCTIONS = {
@@ -41,6 +43,14 @@ _CTA_INSTRUCTIONS = {
 }
 
 STAGE_INSTRUCTIONS = {
+    "inmail": (
+        "Write a LinkedIn Sales Navigator InMail message. "
+        "Return your response in exactly this format:\n"
+        "SUBJECT: [subject line, max 60 chars]\n\n[body text, max 600 chars]\n\n"
+        "The subject must reference something specific from their profile. "
+        "The body: peer opener (agency owner) → specific profile hook → one pain question → mutual fit close. "
+        "No Calendly link, no meeting ask — the only goal is a reply."
+    ),
     "connection_note": (
         "Write a LinkedIn connection request note. "
         "HARD LIMIT: {char_limit} characters (LinkedIn enforces this — count carefully). "

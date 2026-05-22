@@ -47,6 +47,8 @@ class BrandConfig:
     sales_nav_search_url: str  # search URL with ICP filters pre-applied (for populate-list)
     daily_connection_limit: int
     daily_message_limit: int
+    daily_inmail_limit: int
+    monthly_inmail_budget: int
     templates_dir: Path
 
     def load_template(self, name: str) -> str:
@@ -123,6 +125,8 @@ class Settings:
             sales_nav_search_url=o.get("sales_nav_search_url", ""),
             daily_connection_limit=o.get("daily_connection_limit", 5),
             daily_message_limit=o.get("daily_message_limit", 8),
+            daily_inmail_limit=o.get("daily_inmail_limit", 0),
+            monthly_inmail_budget=o.get("monthly_inmail_budget", 50),
             templates_dir=brand_dir / "templates",
         )
 

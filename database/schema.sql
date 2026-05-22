@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS daily_stats (
     bookings_detected       INTEGER DEFAULT 0,
     session_duration_mins   INTEGER DEFAULT 0,
     errors_encountered      INTEGER DEFAULT 0,
+    inmails_sent            INTEGER DEFAULT 0,
     created_at              DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(date, brand)
 );

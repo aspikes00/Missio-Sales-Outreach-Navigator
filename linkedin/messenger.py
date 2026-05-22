@@ -104,6 +104,84 @@ def send_direct_message(page: Page, profile_url: str, message: str, humanizer) -
     return True
 
 
+def send_inmail(page: Page, sales_nav_url: str, subject: str, body: str, humanizer) -> bool:
+    """Send a Sales Navigator InMail. Navigates to the Sales Nav lead page to use the InMail button."""
+    if "/sales/lead/" not in sales_nav_url:
+        logger.warning("send_inmail called with non-Sales-Nav URL: %s", sales_nav_url)
+        return False
+
+    logger.info("Sending InMail to %s", sales_nav_url)
+
+    if page.url != sales_nav_url:
+        page.goto(sales_nav_url, wait_until="domcontentloaded", timeout=20000)
+        time.sleep(random.uniform(2.0, 3.5))
+
+    humanizer.page_scroll(page)
+    humanizer.pre_action_pause()
+
+    # Find the InMail / Message button on the lead page
+    inmail_btn = None
+    for btn_sel in sel.SALES_NAV_INMAIL_BTN_CANDIDATES:
+        candidate = page.query_selector(btn_sel)
+        if candidate and not candidate.is_disabled():
+            inmail_btn = candidate
+            break
+
+    if not inmail_btn:
+        logger.warning("No InMail button found on Sales Nav lead page: %s", sales_nav_url)
+        return False
+
+    inmail_btn.click()
+    time.sleep(random.uniform(1.5, 2.5))
+
+    # Fill subject line
+    try:
+        subject_el = page.wait_for_selector(sel.SALES_NAV_INMAIL_SUBJECT, timeout=8000)
+        subject_el.click()
+        subject_el.fill(subject)
+        time.sleep(random.uniform(0.5, 1.0))
+    except PWTimeout:
+        logger.warning("InMail subject field not found — modal may not have opened.")
+        return False
+
+    # Fill body
+    body_el = None
+    for body_sel in sel.SALES_NAV_INMAIL_BODY_CANDIDATES:
+        candidate = page.query_selector(body_sel)
+        if candidate:
+            body_el = candidate
+            break
+
+    if not body_el:
+        logger.warning("InMail body field not found.")
+        return False
+
+    body_el.click()
+    time.sleep(random.uniform(0.3, 0.6))
+    humanizer.type_text(page, None, body, element=body_el)
+    time.sleep(random.uniform(0.8, 1.5))
+
+    # Send
+    humanizer.pre_action_pause()
+    try:
+        send_btn = page.wait_for_selector(sel.SALES_NAV_INMAIL_SEND_BTN, timeout=8000)
+        send_btn.click()
+        time.sleep(random.uniform(1.5, 3.0))
+        logger.info("InMail sent.")
+        return True
+    except PWTimeout:
+        # Fallback: look for any prominent Send button in the modal
+        for send_sel in ['button[type="submit"]', 'button:has-text("Send")']:
+            btn = page.query_selector(send_sel)
+            if btn and not btn.is_disabled():
+                btn.click()
+                time.sleep(random.uniform(1.5, 3.0))
+                logger.info("InMail sent (fallback send button).")
+                return True
+        logger.warning("Could not find InMail send button.")
+        return False
+
+
 def scan_inbox_for_replies(page: Page, active_lead_urls: list[str]) -> list[str]:
     """Return LinkedIn URLs of leads who have replied since last check."""
     replied = []

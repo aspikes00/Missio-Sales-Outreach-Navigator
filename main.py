@@ -57,6 +57,7 @@ def run(brand: str, dry_run: bool):
     click.echo(f"\nSession complete — {brand_config.name}:")
     click.echo(f"  Connections sent:  {result.connections_sent}")
     click.echo(f"  Messages sent:     {result.messages_sent}")
+    click.echo(f"  InMails sent:      {result.inmails_sent}")
     click.echo(f"  Replies detected:  {result.replies_detected}")
     click.echo(f"  Errors:            {result.errors}")
     if result.halted_early:
