@@ -17,22 +17,48 @@ class AuthError(Exception):
     pass
 
 
-def is_logged_in(page: Page) -> bool:
+def ensure_authenticated(page: Page, email: str, password: str):
+    """Navigate to LinkedIn and ensure the session is authenticated, handling 2FA if needed."""
+    logger.info("Checking LinkedIn session...")
     try:
-        page.goto(LINKEDIN_FEED_URL, wait_until="domcontentloaded", timeout=15000)
-        page.wait_for_selector(sel.FEED_NAV, timeout=8000)
-        return True
-    except (PWTimeout, Exception):
-        return False
+        page.goto(LINKEDIN_FEED_URL, wait_until="domcontentloaded", timeout=20000)
+    except Exception:
+        pass
+
+    time.sleep(random.uniform(2.0, 3.0))
+    current_url = page.url
+
+    # Already on feed — logged in
+    if "/feed" in current_url:
+        try:
+            page.wait_for_selector(sel.FEED_NAV, timeout=10000)
+            logger.info("Using existing LinkedIn session.")
+            return
+        except PWTimeout:
+            pass
+
+    # On a verification/checkpoint page — wait for user to complete it
+    if any(x in current_url for x in ("/checkpoint/", "/challenge/", "/two-step/", "/verification/")):
+        print("\n" + "="*60)
+        print("  LinkedIn needs additional verification.")
+        print("  Complete it in the browser window.")
+        print("  You have 2 minutes.")
+        print("="*60 + "\n")
+        page.wait_for_url("**/feed/**", timeout=120000)
+        logger.info("Verification complete. Logged in.")
+        return
+
+    # Need a fresh login
+    _do_login(page, email, password)
 
 
-def login(page: Page, email: str, password: str) -> bool:
+def _do_login(page: Page, email: str, password: str):
     logger.info("Logging in to LinkedIn...")
     page.goto(LINKEDIN_LOGIN_URL, wait_until="domcontentloaded")
     time.sleep(random.uniform(1.5, 3.0))
 
     try:
-        email_input = page.wait_for_selector(sel.LOGIN_EMAIL_INPUT, timeout=10000)
+        page.wait_for_selector(sel.LOGIN_EMAIL_INPUT, timeout=10000)
         _human_type(page, sel.LOGIN_EMAIL_INPUT, email)
         time.sleep(random.uniform(0.5, 1.5))
 
@@ -44,20 +70,18 @@ def login(page: Page, email: str, password: str) -> bool:
         # Wait briefly then check if 2FA/verification is required
         time.sleep(3)
         current_url = page.url
-        if any(x in current_url for x in ("/checkpoint/", "/challenge/", "/two-step/")):
+        if any(x in current_url for x in ("/checkpoint/", "/challenge/", "/two-step/", "/verification/")):
             print("\n" + "="*60)
             print("  LinkedIn is asking for a verification code.")
             print("  Check your phone/email for the code, enter it in")
             print("  the browser window, then click 'Sign in'.")
             print("  You have 2 minutes.")
             print("="*60 + "\n")
-            # Wait up to 2 minutes for the user to complete 2FA
             page.wait_for_url("**/feed/**", timeout=120000)
         else:
             page.wait_for_url("**/feed/**", timeout=20000)
 
         logger.info("Login successful.")
-        return True
 
     except PWTimeout:
         if page.query_selector(sel.CAPTCHA_INDICATOR):
@@ -65,13 +89,6 @@ def login(page: Page, email: str, password: str) -> bool:
         if page.query_selector(sel.LOGIN_ERROR_BANNER):
             raise AuthError("LinkedIn login failed — check your LINKEDIN_EMAIL and LINKEDIN_PASSWORD.")
         raise AuthError("Login timed out. LinkedIn may be slow or the page layout changed.")
-
-
-def ensure_authenticated(page: Page, email: str, password: str):
-    if is_logged_in(page):
-        logger.info("Using existing LinkedIn session.")
-        return
-    login(page, email, password)
 
 
 def _human_type(page: Page, selector: str, text: str):
