@@ -1,8 +1,20 @@
 #!/bin/bash
 
-# Add Homebrew to PATH in case it's not already there (Apple Silicon)
+# Add Homebrew to PATH (Apple Silicon Macs)
 if [[ -f /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Use the project's isolated Python environment
+PYTHON=".venv/bin/python3"
+
+# If the venv doesn't exist yet, tell the user to run setup first
+if [ ! -f "$PYTHON" ]; then
+  echo ""
+  echo "  Setup not complete. Run this first:"
+  echo "    bash setup.sh"
+  echo ""
+  exit 1
 fi
 
 clear
@@ -35,45 +47,45 @@ case "$choice" in
 
   1)
     echo "Opening browser to fill your Sales Navigator list..."
-    echo "(This will add up to 200 leads. Run it again tomorrow to continue.)"
+    echo "(Adds up to 200 leads. Run it again tomorrow to continue.)"
     echo ""
-    python3 main.py populate-list --brand missio
+    $PYTHON main.py populate-list --brand missio
     ;;
 
   2)
     echo "Generating today's messages in preview mode..."
     echo "(Nothing will be sent — just showing you what Claude would write.)"
     echo ""
-    python3 main.py run --brand missio --dry-run
+    $PYTHON main.py run --brand missio --dry-run
     ;;
 
   3)
     echo "Starting today's outreach session..."
     echo "(Browser will open. You can minimize it — don't close it.)"
     echo ""
-    python3 main.py run --brand missio
+    $PYTHON main.py run --brand missio
     ;;
 
   4)
-    python3 main.py status --brand missio
+    $PYTHON main.py status --brand missio
     ;;
 
   5)
-    python3 main.py report --brand missio
+    $PYTHON main.py report --brand missio
     ;;
 
   6)
-    python3 main.py report --brand missio --week
+    $PYTHON main.py report --brand missio --week
     ;;
 
   7)
-    python3 main.py report --brand missio --save
+    $PYTHON main.py report --brand missio --save
     echo ""
     echo "Report saved to logs/reports/"
     ;;
 
   8)
-    python3 main.py report --brand missio --week --save
+    $PYTHON main.py report --brand missio --week --save
     echo ""
     echo "Report saved to logs/reports/"
     ;;
@@ -85,9 +97,9 @@ case "$choice" in
     printf "  Any notes? (press Enter to skip): "
     read -r notes
     if [ -n "$notes" ]; then
-      python3 main.py mark-booked --brand missio --url "$url" --notes "$notes"
+      $PYTHON main.py mark-booked --brand missio --url "$url" --notes "$notes"
     else
-      python3 main.py mark-booked --brand missio --url "$url"
+      $PYTHON main.py mark-booked --brand missio --url "$url"
     fi
     ;;
 
@@ -95,7 +107,7 @@ case "$choice" in
     echo ""
     printf "  Paste the LinkedIn profile URL to add to do-not-contact: "
     read -r url
-    python3 main.py mark-dnc --url "$url"
+    $PYTHON main.py mark-dnc --url "$url"
     ;;
 
   q|Q)

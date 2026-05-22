@@ -10,7 +10,6 @@ echo ""
 if ! command -v brew &>/dev/null; then
   echo "Installing Homebrew (this takes a few minutes)..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  # Add Homebrew to PATH for Apple Silicon Macs
   if [[ -f /opt/homebrew/bin/brew ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
@@ -29,15 +28,26 @@ else
   echo "✓ Python $(python3 --version | cut -d' ' -f2) already installed."
 fi
 
+# ── Virtual environment ───────────────────────────────────────────────────────
+if [ ! -d ".venv" ]; then
+  echo "Creating isolated Python environment..."
+  python3 -m venv .venv
+  echo "✓ Virtual environment created."
+else
+  echo "✓ Virtual environment already exists."
+fi
+
+PYTHON=".venv/bin/python3"
+PIP=".venv/bin/pip"
+
 # ── Python packages ───────────────────────────────────────────────────────────
-echo ""
-echo "Installing required packages (this takes about a minute)..."
-python3 -m pip install -r requirements.txt -q
+echo "Installing required packages (about a minute)..."
+$PIP install -r requirements.txt -q
 echo "✓ Packages installed."
 
 # ── Playwright browser ────────────────────────────────────────────────────────
 echo "Installing browser (Chromium)..."
-python3 -m playwright install chromium
+$PYTHON -m playwright install chromium
 echo "✓ Browser installed."
 
 # ── .env file ─────────────────────────────────────────────────────────────────
@@ -48,15 +58,14 @@ if [ ! -f .env ]; then
   echo "  ACTION REQUIRED: Fill in your .env"
   echo "======================================"
   echo ""
-  echo "Your .env file was created. You need to fill in 3 values."
-  echo "Opening it now in TextEdit..."
+  echo "Opening .env in TextEdit — fill in your LinkedIn login and Anthropic API key..."
   sleep 1
   open -e .env
   echo ""
   echo "Fill in:"
-  echo "  LINKEDIN_EMAIL    — your LinkedIn login email"
+  echo "  LINKEDIN_EMAIL    — your LinkedIn email"
   echo "  LINKEDIN_PASSWORD — your LinkedIn password"
-  echo "  ANTHROPIC_API_KEY — your Anthropic API key (from console.anthropic.com)"
+  echo "  ANTHROPIC_API_KEY — from console.anthropic.com"
   echo ""
   echo "Save the file, then press Enter to continue..."
   read -r
@@ -75,11 +84,10 @@ if grep -q "YOUR_MISSIO_LIST_ID_HERE" brands/missio/brand.toml; then
   sleep 1
   open -e brands/missio/brand.toml
   echo ""
-  echo "You need to fill in 3 values in that file:"
-  echo ""
-  echo "  sales_nav_list_url   — go to your Sales Navigator list, copy the URL"
-  echo "  sales_nav_list_name  — the exact name of your list in Sales Navigator"
-  echo "  sales_nav_search_url — go to your Sales Nav search, copy the URL"
+  echo "Fill in:"
+  echo "  sales_nav_list_url   — your Sales Navigator list URL"
+  echo "  sales_nav_list_name  — exact name of your list in Sales Navigator"
+  echo "  sales_nav_search_url — your Sales Navigator search URL"
   echo ""
   echo "Save the file, then press Enter to continue..."
   read -r
@@ -87,7 +95,6 @@ else
   echo "✓ Brand config already filled in."
 fi
 
-# ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
 echo "======================================"
 echo "  Setup complete!"
