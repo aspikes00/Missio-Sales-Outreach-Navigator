@@ -25,6 +25,7 @@ class ListLead:
 def sync_leads_from_list(page: Page, list_url: str) -> list[ListLead]:
     """
     Read every lead card from a Sales Navigator saved list.
+    Handles both paginated lists and infinite-scroll lists.
     Returns basic profile info extracted directly from the list view —
     no individual profile visits needed.
     """
@@ -33,26 +34,31 @@ def sync_leads_from_list(page: Page, list_url: str) -> list[ListLead]:
     time.sleep(random.uniform(3.0, 5.0))
 
     leads: list[ListLead] = []
-    page_num = 1
+    seen_urls: set[str] = set()
+    stall_rounds = 0
+    MAX_STALL_ROUNDS = 3
 
     while True:
-        logger.info("Reading list page %d...", page_num)
-
         try:
             page.wait_for_selector(sel.SALES_NAV_LEAD_LIST_ITEM, timeout=15000)
         except PWTimeout:
-            logger.warning("No leads found on page %d — list may be empty or selector changed.", page_num)
+            logger.warning("No lead items found — list may be empty or selector changed.")
             break
 
+        # Try card containers first, fall back to name links
         cards = page.query_selector_all(sel.SALES_NAV_LEAD_CARD)
-
-        # Fallback: if card container selector fails, grab name links directly
-        if not cards:
+        if cards:
+            for card in cards:
+                lead = _parse_card(card)
+                if lead and lead.linkedin_url not in seen_urls:
+                    seen_urls.add(lead.linkedin_url)
+                    leads.append(lead)
+        else:
             items = page.query_selector_all(sel.SALES_NAV_LEAD_LIST_ITEM)
             for item in items:
                 href = item.get_attribute("href") or ""
                 url = _normalize_url(href)
-                if not url:
+                if not url or url in seen_urls:
                     continue
                 name = item.inner_text().strip()
                 parts = name.split(" ", 1)
@@ -62,28 +68,46 @@ def sync_leads_from_list(page: Page, list_url: str) -> list[ListLead]:
                     first_name=parts[0],
                     last_name=parts[1] if len(parts) > 1 else "",
                 )
-                if url not in {l.linkedin_url for l in leads}:
-                    leads.append(lead)
-        else:
-            for card in cards:
-                lead = _parse_card(card)
-                if lead and lead.linkedin_url not in {l.linkedin_url for l in leads}:
-                    leads.append(lead)
+                seen_urls.add(url)
+                leads.append(lead)
 
         logger.info("Total leads read so far: %d", len(leads))
 
-        # Scroll to bottom to ensure pagination button is visible
-        page.mouse.wheel(0, 800)
-        time.sleep(random.uniform(0.5, 1.0))
-
+        # Try pagination button first
         next_btn = page.query_selector(sel.SALES_NAV_PAGINATION_NEXT)
-        if not next_btn or next_btn.is_disabled():
-            logger.info("Reached last page of list.")
-            break
+        if next_btn and not next_btn.is_disabled():
+            next_btn.scroll_into_view_if_needed()
+            time.sleep(random.uniform(0.5, 1.0))
+            next_btn.click()
+            time.sleep(random.uniform(2.5, 4.0))
+            stall_rounds = 0
+            continue
 
-        next_btn.click()
-        page_num += 1
-        time.sleep(random.uniform(2.5, 4.5))
+        # No pagination button — try infinite scroll
+        count_before = len(seen_urls)
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        time.sleep(random.uniform(2.0, 3.0))
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        time.sleep(random.uniform(1.5, 2.5))
+
+        # Check if new cards appeared after scroll
+        new_cards = page.query_selector_all(sel.SALES_NAV_LEAD_CARD)
+        new_count = 0
+        for card in new_cards:
+            lead = _parse_card(card)
+            if lead and lead.linkedin_url not in seen_urls:
+                seen_urls.add(lead.linkedin_url)
+                leads.append(lead)
+                new_count += 1
+
+        if new_count == 0:
+            stall_rounds += 1
+            if stall_rounds >= MAX_STALL_ROUNDS:
+                logger.info("No new leads after %d scroll attempts — list fully read.", MAX_STALL_ROUNDS)
+                break
+        else:
+            stall_rounds = 0
+            logger.info("Scroll loaded %d more leads (total: %d)", new_count, len(leads))
 
     logger.info("Sync complete — %d leads read from list.", len(leads))
     return leads
