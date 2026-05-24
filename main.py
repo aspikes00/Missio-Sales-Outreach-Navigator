@@ -55,11 +55,13 @@ def run(brand: str, dry_run: bool):
     result = orchestrator.run_daily_session()
 
     click.echo(f"\nSession complete — {brand_config.name}:")
-    click.echo(f"  Connections sent:  {result.connections_sent}")
-    click.echo(f"  Messages sent:     {result.messages_sent}")
-    click.echo(f"  InMails sent:      {result.inmails_sent}")
-    click.echo(f"  Replies detected:  {result.replies_detected}")
-    click.echo(f"  Errors:            {result.errors}")
+    click.echo(f"  Connections sent:      {result.connections_sent}")
+    click.echo(f"  Messages sent:         {result.messages_sent}")
+    click.echo(f"  InMails sent:          {result.inmails_sent}")
+    click.echo(f"  Replies detected:      {result.replies_detected}")
+    click.echo(f"  Connections accepted:  {result.connections_accepted}")
+    click.echo(f"  Leads reclassified:    {result.leads_reclassified}")
+    click.echo(f"  Errors:                {result.errors}")
     if result.halted_early:
         click.echo(f"  [!] Halted early: {result.halt_reason}")
 

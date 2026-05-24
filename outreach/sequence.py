@@ -61,6 +61,8 @@ class SessionResult:
     halt_reason: str = ""
     leads_processed: list[str] = field(default_factory=list)
     inmails_sent: int = 0
+    connections_accepted: int = 0
+    leads_reclassified: int = 0
 
 
 class SequenceOrchestrator:
@@ -105,7 +107,7 @@ class SequenceOrchestrator:
                 result.replies_detected = len(replied_urls)
 
             # Check pending connection requests
-            self._check_pending_connections(browser, today)
+            self._check_pending_connections(browser, today, result)
 
             for lead in queue:
                 status = self._watchdog.check(browser.page)
@@ -126,9 +128,9 @@ class SequenceOrchestrator:
                     self._humanizer.between_action_delay()
 
         logger.info(
-            "[%s] Session complete — connections: %d, messages: %d, replies: %d, errors: %d",
+            "[%s] Session complete — connections: %d, messages: %d, replies: %d, accepted: %d, reclassified: %d, errors: %d",
             self._brand.slug, result.connections_sent, result.messages_sent,
-            result.replies_detected, result.errors,
+            result.replies_detected, result.connections_accepted, result.leads_reclassified, result.errors,
         )
         return result
 
@@ -209,12 +211,14 @@ class SequenceOrchestrator:
                             with self._db.transaction() as conn:
                                 update_lead_status(conn, lead.id, "connection_pending")
                             logger.info("Pending invite detected for %s — marked connection_pending.", lead.full_name or lead.linkedin_url)
+                            result.leads_reclassified += 1
                             return True
                     for _btn_sel in _sel.ALREADY_CONNECTED_CANDIDATES:
                         if browser.page.query_selector(_btn_sel):
                             with self._db.transaction() as conn:
                                 update_lead_status(conn, lead.id, "connected")
                             logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
+                            result.leads_reclassified += 1
                             return True
                     # Log what buttons are visible so we can tune selectors
                     _btns = browser.page.query_selector_all("button")
@@ -260,7 +264,7 @@ class SequenceOrchestrator:
             logger.error("Unexpected error for %s: %s", lead.linkedin_url, e)
             return False
 
-    def _check_pending_connections(self, browser: BrowserManager, today: str):
+    def _check_pending_connections(self, browser: BrowserManager, today: str, result: SessionResult):
         with self._db.transaction() as conn:
             cur = conn.execute(
                 "SELECT * FROM leads WHERE brand = ? AND status = 'connection_pending' LIMIT 20",
@@ -277,6 +281,7 @@ class SequenceOrchestrator:
                     with self._db.transaction() as conn:
                         update_lead_status(conn, lead.id, "connected")
                     logger.info("%s accepted the connection.", lead.full_name or lead.first_name)
+                    result.connections_accepted += 1
                     time.sleep(random.uniform(2, 5))
             except Exception as e:
                 logger.warning("Could not check pending for %s: %s", lead.linkedin_url, e)
