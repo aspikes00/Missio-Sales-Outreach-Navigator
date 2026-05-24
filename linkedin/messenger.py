@@ -89,6 +89,14 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
         if send_btn:
             break
     if not send_btn:
+        # Log every button visible in the modal so we can add the right selector
+        all_btns = page.query_selector_all("button")
+        btn_labels = [
+            b.get_attribute("aria-label") or b.inner_text().strip()[:50]
+            for b in all_btns
+            if (b.get_attribute("aria-label") or b.inner_text().strip())
+        ]
+        logger.warning("Modal buttons visible: %s", btn_labels)
         raise MessengerError("Could not find Send button in connection modal.")
 
     humanizer.pre_action_pause()
