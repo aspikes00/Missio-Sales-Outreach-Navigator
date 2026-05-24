@@ -48,6 +48,7 @@ def _resolve_linkedin_url(page: Page, url: str) -> str:
             if href.startswith("/"):
                 href = "https://www.linkedin.com" + href
             if "/in/" in href:
+                href = href.split("?")[0]
                 logger.info("Resolved Sales Nav URL → %s", href)
                 return href
 
