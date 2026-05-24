@@ -55,20 +55,39 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
     connect_btn.click()
     time.sleep(random.uniform(1.0, 2.0))
 
-    add_note_btn = page.query_selector(sel.CONNECT_ADD_NOTE_BUTTON)
+    add_note_btn = None
+    for sel_ in sel.CONNECT_ADD_NOTE_BUTTON_CANDIDATES:
+        add_note_btn = page.query_selector(sel_)
+        if add_note_btn:
+            break
+
     if add_note_btn:
         add_note_btn.click()
         time.sleep(random.uniform(0.8, 1.5))
-        humanizer.type_text(page, sel.CONNECT_NOTE_TEXTAREA, note)
+        textarea = None
+        for sel_ in sel.CONNECT_NOTE_TEXTAREA_CANDIDATES:
+            textarea = page.query_selector(sel_)
+            if textarea:
+                break
+        if textarea:
+            humanizer.type_text(page, None, note, element=textarea)
         time.sleep(random.uniform(0.5, 1.2))
     else:
-        send_without = page.query_selector(sel.CONNECT_SEND_WITHOUT_NOTE)
+        send_without = None
+        for sel_ in sel.CONNECT_SEND_WITHOUT_NOTE_CANDIDATES:
+            send_without = page.query_selector(sel_)
+            if send_without:
+                break
         if send_without:
             send_without.click()
             logger.info("Sent connection request without note (modal variant).")
             return True
 
-    send_btn = page.query_selector(sel.CONNECT_SEND_BUTTON)
+    send_btn = None
+    for sel_ in sel.CONNECT_SEND_BUTTON_CANDIDATES:
+        send_btn = page.query_selector(sel_)
+        if send_btn:
+            break
     if not send_btn:
         raise MessengerError("Could not find Send button in connection modal.")
 

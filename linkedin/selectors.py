@@ -52,10 +52,31 @@ SALES_NAV_DROPDOWN_CONNECT_CANDIDATES = [
 ]
 
 # --- Connect modal ---
-CONNECT_ADD_NOTE_BUTTON = 'button[aria-label="Add a note"]'
-CONNECT_NOTE_TEXTAREA = 'textarea[name="message"]'
-CONNECT_SEND_BUTTON = 'button[aria-label="Send invitation"]'
-CONNECT_SEND_WITHOUT_NOTE = 'button[aria-label="Send without a note"]'
+CONNECT_ADD_NOTE_BUTTON_CANDIDATES = [
+    'button[aria-label="Add a note"]',
+    'button:has-text("Add a note")',
+]
+CONNECT_NOTE_TEXTAREA_CANDIDATES = [
+    'textarea[name="message"]',
+    'textarea[placeholder*="note" i]',
+    'textarea',
+]
+CONNECT_SEND_BUTTON_CANDIDATES = [
+    'button[aria-label="Send invitation"]',
+    'button[aria-label="Send now"]',
+    'button:has-text("Send now")',
+    'button:has-text("Send invitation")',
+    'button[type="submit"]:has-text("Send")',
+]
+CONNECT_SEND_WITHOUT_NOTE_CANDIDATES = [
+    'button[aria-label="Send without a note"]',
+    'button:has-text("Send without a note")',
+]
+# Keep single-value aliases for code that still uses the old names
+CONNECT_ADD_NOTE_BUTTON = CONNECT_ADD_NOTE_BUTTON_CANDIDATES[0]
+CONNECT_NOTE_TEXTAREA = CONNECT_NOTE_TEXTAREA_CANDIDATES[0]
+CONNECT_SEND_BUTTON = CONNECT_SEND_BUTTON_CANDIDATES[0]
+CONNECT_SEND_WITHOUT_NOTE = CONNECT_SEND_WITHOUT_NOTE_CANDIDATES[0]
 
 # --- Message composer ---
 MESSAGE_COMPOSE_TEXTAREA = '.msg-form__contenteditable'
