@@ -31,11 +31,22 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
 
     connect_btn = page.query_selector(sel.CONNECT_BUTTON)
     if not connect_btn:
-        more_btn = page.query_selector('button[aria-label="More actions"]')
-        if more_btn:
-            more_btn.click()
-            time.sleep(random.uniform(0.8, 1.5))
-            connect_btn = page.query_selector(sel.CONNECT_BUTTON)
+        # Try the "..." overflow dropdown (Sales Nav hides Connect there)
+        for more_sel in sel.SALES_NAV_MORE_BTN_CANDIDATES:
+            more_btn = page.query_selector(more_sel)
+            if more_btn:
+                more_btn.click()
+                time.sleep(random.uniform(0.8, 1.5))
+                # First try the standard Connect button in case it appeared
+                connect_btn = page.query_selector(sel.CONNECT_BUTTON)
+                if not connect_btn:
+                    # Look for Connect inside the dropdown list
+                    for dropdown_sel in sel.SALES_NAV_DROPDOWN_CONNECT_CANDIDATES:
+                        candidate = page.query_selector(dropdown_sel)
+                        if candidate:
+                            connect_btn = candidate
+                            break
+                break
 
     if not connect_btn:
         logger.warning("No Connect button found on %s (may already be connected or pending)", profile_url)

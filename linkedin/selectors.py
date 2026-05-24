@@ -24,7 +24,7 @@ PROFILE_ABOUT = '#about ~ .display-flex .inline-show-more-text'
 CONNECT_BUTTON = 'button[aria-label^="Connect"]'
 MESSAGE_BUTTON = 'button[aria-label^="Message"]'
 PENDING_BUTTON = 'button[aria-label^="Pending"]'
-# Broader fallbacks for when LinkedIn changes button aria-labels
+# NOTE: only use these on regular /in/ profile pages — on Sales Nav, Message ≠ connected
 ALREADY_CONNECTED_CANDIDATES = [
     'button[aria-label^="Message"]',
     'button:has-text("Message")',
@@ -35,6 +35,20 @@ ALREADY_PENDING_CANDIDATES = [
     'button[aria-label*="pending"]',
     'button:has-text("Pending")',
     'button:has-text("Sent")',
+]
+
+# --- Sales Navigator: "..." overflow menu → Connect ---
+SALES_NAV_MORE_BTN_CANDIDATES = [
+    'button[aria-label="More actions"]',
+    'button[aria-label="More options"]',
+    'button[aria-label*="more" i]',
+]
+SALES_NAV_DROPDOWN_CONNECT_CANDIDATES = [
+    'div[aria-label="Connect"]',
+    '[role="option"]:has-text("Connect")',
+    '.artdeco-dropdown__item:has-text("Connect")',
+    'li:has-text("Connect")',
+    'span:has-text("Connect")',
 ]
 
 # --- Connect modal ---

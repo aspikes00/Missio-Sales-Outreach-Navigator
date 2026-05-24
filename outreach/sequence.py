@@ -204,8 +204,13 @@ class SequenceOrchestrator:
             if stage_name == "connection_note":
                 sent = send_connection_request(browser.page, action_url, message, self._humanizer)
                 if not sent:
-                    # Check if we hit a Pending or Message button — manual outreach was done earlier
+                    # Check if we hit a Pending or Message button — manual outreach was done earlier.
+                    # IMPORTANT: only trust these on regular /in/ pages. On Sales Nav, Message just
+                    # means InMail-able (2nd degree) — it does NOT mean already connected.
                     from linkedin import selectors as _sel
+                    _on_regular_profile = (
+                        "/in/" in browser.page.url and "/sales/" not in browser.page.url
+                    )
                     for _btn_sel in _sel.ALREADY_PENDING_CANDIDATES:
                         if browser.page.query_selector(_btn_sel):
                             with self._db.transaction() as conn:
@@ -213,13 +218,14 @@ class SequenceOrchestrator:
                             logger.info("Pending invite detected for %s — marked connection_pending.", lead.full_name or lead.linkedin_url)
                             result.leads_reclassified += 1
                             return True
-                    for _btn_sel in _sel.ALREADY_CONNECTED_CANDIDATES:
-                        if browser.page.query_selector(_btn_sel):
-                            with self._db.transaction() as conn:
-                                update_lead_status(conn, lead.id, "connected")
-                            logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
-                            result.leads_reclassified += 1
-                            return True
+                    if _on_regular_profile:
+                        for _btn_sel in _sel.ALREADY_CONNECTED_CANDIDATES:
+                            if browser.page.query_selector(_btn_sel):
+                                with self._db.transaction() as conn:
+                                    update_lead_status(conn, lead.id, "connected")
+                                logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
+                                result.leads_reclassified += 1
+                                return True
                     # Log what buttons are visible so we can tune selectors
                     _btns = browser.page.query_selector_all("button")
                     _labels = [b.get_attribute("aria-label") or b.inner_text().strip()[:40] for b in _btns if b.get_attribute("aria-label") or b.inner_text().strip()]
@@ -276,6 +282,12 @@ class SequenceOrchestrator:
             try:
                 from linkedin.scraper import _resolve_linkedin_url
                 check_url = _resolve_linkedin_url(browser.page, lead.linkedin_url)
+                # Only trust the Message button as "connected" on a regular /in/ page.
+                # If URL resolution failed we're still on a Sales Nav page where Message ≠ connected.
+                if "/in/" not in check_url or "/sales/" in check_url:
+                    logger.info("Skipping pending check for %s — could not resolve to regular profile.", lead.full_name or lead.first_name)
+                    time.sleep(random.uniform(1, 2))
+                    continue
                 accepted = check_connection_accepted(browser.page, check_url)
                 if accepted:
                     with self._db.transaction() as conn:
