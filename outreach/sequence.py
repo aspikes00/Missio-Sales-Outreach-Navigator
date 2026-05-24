@@ -226,6 +226,12 @@ class SequenceOrchestrator:
                                 logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
                                 result.leads_reclassified += 1
                                 return True
+                    # On Sales Nav pages where URL resolution failed, we can't reliably detect
+                    # whether this is already connected or not — skip without counting as an error.
+                    _on_sales_nav = "/sales/" in browser.page.url
+                    if _on_sales_nav:
+                        logger.info("Could not send or classify %s on Sales Nav — skipping this session.", lead.full_name or lead.linkedin_url)
+                        return True
                     # Log what buttons are visible so we can tune selectors
                     _btns = browser.page.query_selector_all("button")
                     _labels = [b.get_attribute("aria-label") or b.inner_text().strip()[:40] for b in _btns if b.get_attribute("aria-label") or b.inner_text().strip()]
