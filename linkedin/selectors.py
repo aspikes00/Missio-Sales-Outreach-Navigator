@@ -39,16 +39,14 @@ ALREADY_PENDING_CANDIDATES = [
 
 # --- Sales Navigator: "..." overflow menu → Connect ---
 SALES_NAV_MORE_BTN_CANDIDATES = [
+    'button[aria-label="Open actions overflow menu"]',
     'button[aria-label="More actions"]',
     'button[aria-label="More options"]',
-    'button[aria-label*="more" i]',
 ]
 SALES_NAV_DROPDOWN_CONNECT_CANDIDATES = [
     'div[aria-label="Connect"]',
     '[role="option"]:has-text("Connect")',
     '.artdeco-dropdown__item:has-text("Connect")',
-    'li:has-text("Connect")',
-    'span:has-text("Connect")',
 ]
 
 # --- Connect modal ---

@@ -49,6 +49,10 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
                         if candidate:
                             connect_btn = candidate
                             break
+                if not connect_btn:
+                    # No Connect in dropdown — close it and bail (already pending/connected)
+                    page.keyboard.press("Escape")
+                    time.sleep(0.5)
                 break
 
     if not connect_btn:
