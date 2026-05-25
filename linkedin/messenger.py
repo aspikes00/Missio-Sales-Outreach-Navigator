@@ -79,11 +79,30 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
         )
         return False
 
+    # Dismiss any spotlight/onboarding popup that has role="dialog" — it would
+    # intercept our modal search since it appears before the connection modal.
+    spotlight = page.query_selector('button[aria-label="Dismiss spotlight popup"]')
+    if spotlight:
+        _js_click(spotlight)
+        time.sleep(0.4)
+
     _js_click(connect_btn)
     time.sleep(random.uniform(1.5, 2.5))
 
-    # Scope all modal searches to the dialog to avoid matching hidden page elements
-    modal = page.query_selector('[role="dialog"]')
+    # Find the connection modal specifically — iterate all dialogs and pick the
+    # one that contains connection-modal content (note textarea or send buttons).
+    modal = None
+    for dlg in page.query_selector_all('[role="dialog"]'):
+        if (dlg.query_selector('button[aria-label="Add a note"]') or
+                dlg.query_selector('button:has-text("Add a note")') or
+                dlg.query_selector('textarea') or
+                dlg.query_selector('button[aria-label*="Send invitation"]') or
+                dlg.query_selector('button[aria-label="Send without a note"]') or
+                dlg.query_selector('button:has-text("Send without a note")')):
+            modal = dlg
+            break
+    if not modal:
+        modal = page.query_selector('[role="dialog"]')
     ctx = modal if modal else page
 
     add_note_btn = None
