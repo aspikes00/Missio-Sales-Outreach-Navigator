@@ -16,6 +16,11 @@ class MessengerError(Exception):
     pass
 
 
+def _js_click(element) -> None:
+    """Click via JavaScript — bypasses Playwright's visibility/stability wait."""
+    element.evaluate("el => el.click()")
+
+
 def send_connection_request(page: Page, profile_url: str, note: str, humanizer) -> bool:
     if len(note) > CONNECTION_NOTE_LIMIT:
         raise ValueError(f"Connection note exceeds {CONNECTION_NOTE_LIMIT} chars: {len(note)}")
@@ -35,12 +40,10 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
         for more_sel in sel.SALES_NAV_MORE_BTN_CANDIDATES:
             more_btn = page.query_selector(more_sel)
             if more_btn:
-                more_btn.click()
+                _js_click(more_btn)
                 time.sleep(random.uniform(0.8, 1.5))
-                # First try the standard Connect button in case it appeared
                 connect_btn = page.query_selector(sel.CONNECT_BUTTON)
                 if not connect_btn:
-                    # Look for Connect inside the dropdown list
                     for dropdown_sel in sel.SALES_NAV_DROPDOWN_CONNECT_CANDIDATES:
                         candidate = page.query_selector(dropdown_sel)
                         if candidate:
@@ -52,21 +55,25 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
         logger.warning("No Connect button found on %s (may already be connected or pending)", profile_url)
         return False
 
-    connect_btn.click()
-    time.sleep(random.uniform(1.0, 2.0))
+    _js_click(connect_btn)
+    time.sleep(random.uniform(1.5, 2.5))
+
+    # Scope all modal searches to the dialog to avoid matching hidden page elements
+    modal = page.query_selector('[role="dialog"]')
+    ctx = modal if modal else page
 
     add_note_btn = None
     for sel_ in sel.CONNECT_ADD_NOTE_BUTTON_CANDIDATES:
-        add_note_btn = page.query_selector(sel_)
+        add_note_btn = ctx.query_selector(sel_)
         if add_note_btn:
             break
 
     if add_note_btn:
-        add_note_btn.click()
+        _js_click(add_note_btn)
         time.sleep(random.uniform(0.8, 1.5))
         textarea = None
         for sel_ in sel.CONNECT_NOTE_TEXTAREA_CANDIDATES:
-            textarea = page.query_selector(sel_)
+            textarea = ctx.query_selector(sel_)
             if textarea:
                 break
         if textarea:
@@ -75,21 +82,20 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
     else:
         send_without = None
         for sel_ in sel.CONNECT_SEND_WITHOUT_NOTE_CANDIDATES:
-            send_without = page.query_selector(sel_)
+            send_without = ctx.query_selector(sel_)
             if send_without:
                 break
         if send_without:
-            send_without.click()
+            _js_click(send_without)
             logger.info("Sent connection request without note (modal variant).")
             return True
 
     send_btn = None
     for sel_ in sel.CONNECT_SEND_BUTTON_CANDIDATES:
-        send_btn = page.query_selector(sel_)
+        send_btn = ctx.query_selector(sel_)
         if send_btn:
             break
     if not send_btn:
-        # Log every button visible in the modal so we can add the right selector
         all_btns = page.query_selector_all("button")
         btn_labels = [
             b.get_attribute("aria-label") or b.inner_text().strip()[:50]
@@ -100,7 +106,7 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
         raise MessengerError("Could not find Send button in connection modal.")
 
     humanizer.pre_action_pause()
-    send_btn.click()
+    _js_click(send_btn)
     time.sleep(random.uniform(1.5, 3.0))
     logger.info("Connection request sent.")
     return True
