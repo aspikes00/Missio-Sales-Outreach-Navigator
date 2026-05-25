@@ -47,6 +47,9 @@ SALES_NAV_DROPDOWN_CONNECT_CANDIDATES = [
     'div[aria-label="Connect"]',
     '[role="option"]:has-text("Connect")',
     '.artdeco-dropdown__item:has-text("Connect")',
+    # Playwright text engine — exact match, most reliable
+    'text="Connect"',
+    ':text-is("Connect")',
 ]
 
 # --- Connect modal ---

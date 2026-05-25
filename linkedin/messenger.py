@@ -40,17 +40,24 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
         for more_sel in sel.SALES_NAV_MORE_BTN_CANDIDATES:
             more_btn = page.query_selector(more_sel)
             if more_btn:
-                _js_click(more_btn)
-                time.sleep(random.uniform(0.8, 1.5))
+                # Use real Playwright click (not JS) so React event handlers fire
+                try:
+                    more_btn.click(timeout=5000)
+                except Exception:
+                    _js_click(more_btn)
+                time.sleep(random.uniform(1.2, 2.0))  # Wait for dropdown to render
+
                 connect_btn = page.query_selector(sel.CONNECT_BUTTON)
                 if not connect_btn:
                     for dropdown_sel in sel.SALES_NAV_DROPDOWN_CONNECT_CANDIDATES:
                         candidate = page.query_selector(dropdown_sel)
                         if candidate:
                             connect_btn = candidate
+                            logger.info("Found Connect in dropdown via: %s", dropdown_sel)
                             break
                 if not connect_btn:
                     # No Connect in dropdown — close it and bail (already pending/connected)
+                    logger.info("No Connect option in dropdown on %s", profile_url)
                     page.keyboard.press("Escape")
                     time.sleep(0.5)
                 break
