@@ -248,6 +248,10 @@ class SequenceOrchestrator:
                     _btns = browser.page.query_selector_all("button")
                     _labels = [b.get_attribute("aria-label") or b.inner_text().strip()[:40] for b in _btns if b.get_attribute("aria-label") or b.inner_text().strip()]
                     logger.warning("No Connect/Pending/Message button found for %s. Visible buttons: %s", lead.full_name, _labels[:15])
+                    # Skip gracefully — lead stays not_contacted and will be retried
+                    if _on_regular_profile:
+                        logger.info("Skipping %s on regular profile — no classifiable button found.", lead.full_name or lead.linkedin_url)
+                        return True
                 if sent:
                     result.connections_sent += 1
             else:

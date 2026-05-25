@@ -33,7 +33,6 @@ CONNECT_BUTTON_CANDIDATES = [
 # NOTE: only use these on regular /in/ profile pages — on Sales Nav, Message ≠ connected
 ALREADY_CONNECTED_CANDIDATES = [
     'button[aria-label^="Message"]',
-    'button:has-text("Message")',
 ]
 ALREADY_PENDING_CANDIDATES = [
     'button[aria-label^="Pending"]',
@@ -43,9 +42,10 @@ ALREADY_PENDING_CANDIDATES = [
     'button:has-text("Sent")',
 ]
 
-# --- Sales Navigator: "..." overflow menu → Connect ---
+# --- Overflow "More" menus (Sales Nav AND regular profiles with creator mode) ---
 SALES_NAV_MORE_BTN_CANDIDATES = [
-    'button[aria-label="Open actions overflow menu"]',
+    'button[aria-label="Open actions overflow menu"]',  # Sales Nav
+    'button[aria-label="More member actions"]',          # Regular profiles (creator mode)
     'button[aria-label="More actions"]',
     'button[aria-label="More options"]',
 ]
