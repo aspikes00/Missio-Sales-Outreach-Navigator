@@ -34,7 +34,12 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
     humanizer.page_scroll(page)
     humanizer.pre_action_pause()
 
-    connect_btn = page.query_selector(sel.CONNECT_BUTTON)
+    connect_btn = None
+    for _csel in sel.CONNECT_BUTTON_CANDIDATES:
+        connect_btn = page.query_selector(_csel)
+        if connect_btn:
+            logger.info("Found Connect button via: %s", _csel)
+            break
     if not connect_btn:
         # Try the "..." overflow dropdown (Sales Nav hides Connect there)
         for more_sel in sel.SALES_NAV_MORE_BTN_CANDIDATES:

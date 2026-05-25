@@ -24,6 +24,11 @@ PROFILE_ABOUT = '#about ~ .display-flex .inline-show-more-text'
 CONNECT_BUTTON = 'button[aria-label^="Connect"]'
 MESSAGE_BUTTON = 'button[aria-label^="Message"]'
 PENDING_BUTTON = 'button[aria-label^="Pending"]'
+CONNECT_BUTTON_CANDIDATES = [
+    'button[aria-label^="Connect"]',
+    'button[aria-label*="to connect"]',   # "Invite [Name] to connect"
+    'button[aria-label^="Invite"]',
+]
 # NOTE: only use these on regular /in/ profile pages — on Sales Nav, Message ≠ connected
 ALREADY_CONNECTED_CANDIDATES = [
     'button[aria-label^="Message"]',

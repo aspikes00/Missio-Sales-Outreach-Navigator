@@ -220,13 +220,18 @@ class SequenceOrchestrator:
                             result.leads_reclassified += 1
                             return True
                     if _on_regular_profile:
-                        for _btn_sel in _sel.ALREADY_CONNECTED_CANDIDATES:
-                            if browser.page.query_selector(_btn_sel):
-                                with self._db.transaction() as conn:
-                                    update_lead_status(conn, lead.id, "connected")
-                                logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
-                                result.leads_reclassified += 1
-                                return True
+                        # Verify no Connect button exists before concluding they're connected
+                        _has_connect = any(
+                            browser.page.query_selector(s) for s in _sel.CONNECT_BUTTON_CANDIDATES
+                        )
+                        if not _has_connect:
+                            for _btn_sel in _sel.ALREADY_CONNECTED_CANDIDATES:
+                                if browser.page.query_selector(_btn_sel):
+                                    with self._db.transaction() as conn:
+                                        update_lead_status(conn, lead.id, "connected")
+                                    logger.info("Already connected to %s — marked connected.", lead.full_name or lead.linkedin_url)
+                                    result.leads_reclassified += 1
+                                    return True
                     # On Sales Nav, check page text for signs of a prior pending request
                     _on_sales_nav = "/sales/" in browser.page.url
                     if _on_sales_nav:
