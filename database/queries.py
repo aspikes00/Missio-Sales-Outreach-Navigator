@@ -36,7 +36,7 @@ def get_leads_due_for_outreach(
             break
 
     not_contacted = conn.execute(
-        "SELECT * FROM leads WHERE brand = ? AND status = 'not_contacted' ORDER BY imported_at ASC LIMIT ?",
+        "SELECT * FROM leads WHERE brand = ? AND status = 'not_contacted' ORDER BY id DESC LIMIT ?",
         (brand, max(0, limit - len(rows))),
     ).fetchall()
     rows.extend(not_contacted)
