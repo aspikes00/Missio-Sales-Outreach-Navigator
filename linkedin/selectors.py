@@ -28,6 +28,7 @@ CONNECT_BUTTON_CANDIDATES = [
     'button[aria-label^="Connect"]',
     'button[aria-label*="to connect"]',   # "Invite [Name] to connect"
     'button[aria-label^="Invite"]',
+    'button:has-text("Connect")',
 ]
 # NOTE: only use these on regular /in/ profile pages — on Sales Nav, Message ≠ connected
 ALREADY_CONNECTED_CANDIDATES = [

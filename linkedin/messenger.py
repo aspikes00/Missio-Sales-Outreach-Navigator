@@ -68,7 +68,15 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
                 break
 
     if not connect_btn:
-        logger.warning("No Connect button found on %s (may already be connected or pending)", profile_url)
+        _all_btns = page.query_selector_all("button")
+        _btn_labels = [
+            b.get_attribute("aria-label") or b.inner_text().strip()[:50]
+            for b in _all_btns
+            if (b.get_attribute("aria-label") or b.inner_text().strip())
+        ]
+        logger.warning(
+            "No Connect button found on %s. Visible buttons: %s", profile_url, _btn_labels[:20]
+        )
         return False
 
     _js_click(connect_btn)
