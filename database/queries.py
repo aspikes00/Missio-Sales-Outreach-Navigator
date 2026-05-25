@@ -8,9 +8,9 @@ from database.models import DailyStats, Lead, OutreachLog
 # Days to wait between each stage touch
 STAGE_WAIT_DAYS = {
     "connected": 0,
-    "stage_1_sent": 5,
-    "stage_2_sent": 6,
-    "stage_3_sent": 7,
+    "stage_1_sent": 3,
+    "stage_2_sent": 3,
+    "stage_3_sent": 1,
     "connection_pending": 21,
 }
 
