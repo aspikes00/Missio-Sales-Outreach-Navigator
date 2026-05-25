@@ -89,10 +89,6 @@ class SequenceOrchestrator:
             result.halt_reason = "outside_business_hours"
             return result
 
-        queue = self._scheduler.build_queue(self._db, today, self._brand.slug)
-        if not queue:
-            return result
-
         with BrowserManager(self._settings) as browser:
             ensure_authenticated(
                 browser.page, self._settings.linkedin_email, self._settings.linkedin_password
@@ -106,8 +102,13 @@ class SequenceOrchestrator:
                 self._mark_replies(replied_urls, today)
                 result.replies_detected = len(replied_urls)
 
-            # Check pending connection requests
+            # Check pending connections first — newly accepted leads become eligible
+            # for message_1 immediately (wait_days=0) and will appear in the queue below
             self._check_pending_connections(browser, today, result)
+
+            queue = self._scheduler.build_queue(self._db, today, self._brand.slug)
+            if not queue:
+                return result
 
             for lead in queue:
                 status = self._watchdog.check(browser.page)
