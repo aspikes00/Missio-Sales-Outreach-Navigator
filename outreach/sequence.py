@@ -256,6 +256,17 @@ class SequenceOrchestrator:
                     result.connections_sent += 1
             else:
                 sent = send_direct_message(browser.page, action_url, message, self._humanizer)
+                if not sent:
+                    # No Message button on a lead we thought was connected — they likely
+                    # never accepted. Reset to connection_pending for re-verification.
+                    with self._db.transaction() as conn:
+                        update_lead_status(conn, lead.id, "connection_pending")
+                    logger.info(
+                        "No Message button for %s — reset to connection_pending for re-check.",
+                        lead.full_name or lead.linkedin_url,
+                    )
+                    result.leads_reclassified += 1
+                    return True
                 if sent:
                     result.messages_sent += 1
 

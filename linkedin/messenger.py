@@ -41,31 +41,45 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
             logger.info("Found Connect button via: %s", _csel)
             break
     if not connect_btn:
-        # Try the "..." overflow dropdown (Sales Nav hides Connect there)
+        # Try overflow/More menus — collect all candidates to try.
+        # Named selectors (Sales Nav, labeled buttons) come first; then fall back
+        # to every unlabeled "More" button for creator-mode regular profiles.
+        more_btns_to_try = []
+        seen_els = set()
         for more_sel in sel.SALES_NAV_MORE_BTN_CANDIDATES:
-            more_btn = page.query_selector(more_sel)
-            if more_btn:
-                # Use real Playwright click (not JS) so React event handlers fire
-                try:
-                    more_btn.click(timeout=5000)
-                except Exception:
-                    _js_click(more_btn)
-                time.sleep(random.uniform(1.2, 2.0))  # Wait for dropdown to render
+            btn = page.query_selector(more_sel)
+            if btn:
+                eid = btn.evaluate("el => el.outerHTML[:80]") if btn else None
+                if eid not in seen_els:
+                    seen_els.add(eid)
+                    more_btns_to_try.append(btn)
+        for btn in page.query_selector_all("button"):
+            if btn.inner_text().strip() == "More" and not btn.get_attribute("aria-label"):
+                eid = btn.evaluate("el => el.outerHTML[:80]")
+                if eid not in seen_els:
+                    seen_els.add(eid)
+                    more_btns_to_try.append(btn)
 
-                connect_btn = page.query_selector(sel.CONNECT_BUTTON)
-                if not connect_btn:
-                    for dropdown_sel in sel.SALES_NAV_DROPDOWN_CONNECT_CANDIDATES:
-                        candidate = page.query_selector(dropdown_sel)
-                        if candidate:
-                            connect_btn = candidate
-                            logger.info("Found Connect in dropdown via: %s", dropdown_sel)
-                            break
-                if not connect_btn:
-                    # No Connect in dropdown — close it and bail (already pending/connected)
-                    logger.info("No Connect option in dropdown on %s", profile_url)
-                    page.keyboard.press("Escape")
-                    time.sleep(0.5)
+        for more_btn in more_btns_to_try:
+            try:
+                more_btn.click(timeout=5000)
+            except Exception:
+                _js_click(more_btn)
+            time.sleep(random.uniform(1.2, 2.0))
+
+            connect_btn = page.query_selector(sel.CONNECT_BUTTON)
+            if not connect_btn:
+                for dropdown_sel in sel.SALES_NAV_DROPDOWN_CONNECT_CANDIDATES:
+                    candidate = page.query_selector(dropdown_sel)
+                    if candidate:
+                        connect_btn = candidate
+                        logger.info("Found Connect in dropdown via: %s", dropdown_sel)
+                        break
+            if connect_btn:
                 break
+            # Not this More button — close dropdown and try the next one
+            page.keyboard.press("Escape")
+            time.sleep(0.5)
 
     if not connect_btn:
         _all_btns = page.query_selector_all("button")
