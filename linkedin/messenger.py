@@ -49,13 +49,13 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
         for more_sel in sel.SALES_NAV_MORE_BTN_CANDIDATES:
             btn = page.query_selector(more_sel)
             if btn:
-                eid = btn.evaluate("el => el.outerHTML[:80]") if btn else None
+                eid = btn.evaluate("el => el.outerHTML.substring(0, 80)")
                 if eid not in seen_els:
                     seen_els.add(eid)
                     more_btns_to_try.append(btn)
         for btn in page.query_selector_all("button"):
             if btn.inner_text().strip() == "More" and not btn.get_attribute("aria-label"):
-                eid = btn.evaluate("el => el.outerHTML[:80]")
+                eid = btn.evaluate("el => el.outerHTML.substring(0, 80)")
                 if eid not in seen_els:
                     seen_els.add(eid)
                     more_btns_to_try.append(btn)
