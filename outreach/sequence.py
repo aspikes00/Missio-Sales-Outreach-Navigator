@@ -2,6 +2,7 @@ from __future__ import annotations
 import logging
 import random
 import time
+import traceback
 from dataclasses import dataclass, field
 from datetime import date, datetime
 
@@ -285,7 +286,13 @@ class SequenceOrchestrator:
                     and self._brand.daily_inmail_limit > 0
                     and (lead.recent_post_1 or lead.headline)
                 ):
-                    self._try_send_inmail(browser, lead, today, result)
+                    try:
+                        self._try_send_inmail(browser, lead, today, result)
+                    except Exception as inmail_err:
+                        logger.warning(
+                            "InMail attempt failed (non-fatal) for %s: %s\n%s",
+                            lead.linkedin_url, inmail_err, traceback.format_exc(),
+                        )
 
                 return True
             return False
@@ -300,7 +307,7 @@ class SequenceOrchestrator:
                 increment_daily_stat(conn, today, self._brand.slug, "errors_encountered")
             return False
         except Exception as e:
-            logger.error("Unexpected error for %s: %s", lead.linkedin_url, e)
+            logger.error("Unexpected error for %s: %s\n%s", lead.linkedin_url, e, traceback.format_exc())
             return False
 
     def _check_pending_connections(self, browser: BrowserManager, today: str, result: SessionResult):
