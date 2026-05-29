@@ -316,7 +316,7 @@ class SequenceOrchestrator:
                 """SELECT * FROM leads
                    WHERE brand = ? AND status = 'connection_pending'
                      AND (last_activity_at IS NULL OR date(last_activity_at) < ?)
-                   ORDER BY last_activity_at ASC LIMIT 10""",
+                   ORDER BY last_activity_at ASC LIMIT 25""",
                 (self._brand.slug, today),
             )
             pending = [Lead.from_row(tuple(r)) for r in cur.fetchall()]

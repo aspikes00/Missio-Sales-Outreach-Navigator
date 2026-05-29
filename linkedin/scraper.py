@@ -155,13 +155,52 @@ def check_connection_accepted(page: Page, profile_url: str) -> bool:
         page.goto(profile_url, wait_until="domcontentloaded", timeout=20000)
         time.sleep(random.uniform(1.5, 3.0))
 
-    msg_btn = page.query_selector(sel.MESSAGE_BUTTON)
-    if msg_btn:
+    # Direct Message button = connected (regular profiles)
+    if page.query_selector(sel.MESSAGE_BUTTON):
         return True
 
-    pending_btn = page.query_selector(sel.PENDING_BUTTON)
-    if pending_btn:
+    # Pending button = request still pending
+    if page.query_selector(sel.PENDING_BUTTON):
         return False
+
+    # Direct Connect button = not connected
+    for csel in sel.CONNECT_BUTTON_CANDIDATES:
+        if page.query_selector(csel):
+            return False
+
+    # No direct button found — likely a creator-mode profile (Follow + More).
+    # Open the More dropdown: if Connect is inside → not connected; if absent → connected.
+    for more_sel in sel.SALES_NAV_MORE_BTN_CANDIDATES:
+        more_btn = page.query_selector(more_sel)
+        if more_btn:
+            try:
+                more_btn.click(timeout=3000)
+            except Exception:
+                more_btn.evaluate("el => el.click()")
+            time.sleep(random.uniform(0.7, 1.2))
+
+            connect_in_dropdown = any(
+                page.query_selector(ds) for ds in sel.SALES_NAV_DROPDOWN_CONNECT_CANDIDATES
+            )
+            page.keyboard.press("Escape")
+            time.sleep(0.3)
+            return not connect_in_dropdown
+
+    # Also try unlabeled "More" buttons (creator-mode regular profiles)
+    for btn in page.query_selector_all("button"):
+        if btn.inner_text().strip() == "More" and not btn.get_attribute("aria-label"):
+            try:
+                btn.click(timeout=3000)
+            except Exception:
+                btn.evaluate("el => el.click()")
+            time.sleep(random.uniform(0.7, 1.2))
+
+            connect_in_dropdown = any(
+                page.query_selector(ds) for ds in sel.SALES_NAV_DROPDOWN_CONNECT_CANDIDATES
+            )
+            page.keyboard.press("Escape")
+            time.sleep(0.3)
+            return not connect_in_dropdown
 
     return False
 
