@@ -182,6 +182,17 @@ class SequenceOrchestrator:
             else lead.linkedin_url
         )
 
+        # Persist resolved URL — if Sales Nav URL resolved to a regular /in/ URL, update the DB
+        # so future sessions go directly to the right page (avoids Sales Nav message failures).
+        if action_url != lead.linkedin_url and "/in/" in action_url and "/sales/" not in action_url:
+            try:
+                with self._db.transaction() as conn:
+                    conn.execute("UPDATE leads SET linkedin_url = ? WHERE id = ?", (action_url, lead.id))
+                logger.info("Resolved URL saved for %s: %s", lead.full_name or lead.first_name, action_url)
+                lead.linkedin_url = action_url
+            except Exception:
+                pass  # UNIQUE constraint — another lead record already has this URL
+
         message = self._generator.generate(
             lead=lead,
             stage=stage_name,
@@ -256,6 +267,15 @@ class SequenceOrchestrator:
                 if sent:
                     result.connections_sent += 1
             else:
+                # Sales Nav URLs can't be used for direct messaging — the compose interface
+                # is different and our selectors won't find the textarea.  If the URL still
+                # points to Sales Nav it means resolution failed; skip and try next session.
+                if "/sales/lead/" in action_url:
+                    logger.info(
+                        "Cannot direct-message %s — Sales Nav URL unresolvable. Will retry next session.",
+                        lead.full_name or lead.first_name,
+                    )
+                    return True  # Not an error; lead stays connected for next attempt
                 sent = send_direct_message(browser.page, action_url, message, self._humanizer)
                 if not sent:
                     # No Message button on a lead we thought was connected — they likely
@@ -325,6 +345,14 @@ class SequenceOrchestrator:
             try:
                 from linkedin.scraper import _resolve_linkedin_url
                 check_url = _resolve_linkedin_url(browser.page, lead.linkedin_url)
+                # Persist resolved URL immediately — saves it for the message stage later
+                if "/in/" in check_url and "/sales/" not in check_url and check_url != lead.linkedin_url:
+                    try:
+                        with self._db.transaction() as conn:
+                            conn.execute("UPDATE leads SET linkedin_url = ? WHERE id = ?", (check_url, lead.id))
+                        lead.linkedin_url = check_url
+                    except Exception:
+                        pass
                 # Only trust the Message button as "connected" on a regular /in/ page.
                 # If URL resolution failed we're still on a Sales Nav page where Message ≠ connected.
                 if "/in/" not in check_url or "/sales/" in check_url:
