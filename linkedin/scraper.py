@@ -34,9 +34,30 @@ def _resolve_linkedin_url(page: Page, url: str) -> str:
         return url
 
     page.goto(url, wait_until="domcontentloaded", timeout=20000)
-    time.sleep(random.uniform(2.0, 3.5))
 
-    # Sales Nav lead pages have a link to the regular profile
+    # Wait for the lead page to hydrate — person-name signals content rendered
+    try:
+        page.wait_for_selector('[data-anonymize="person-name"]', timeout=8000)
+    except PWTimeout:
+        pass
+    time.sleep(random.uniform(1.5, 2.5))
+
+    # Strategy 1: JavaScript link extraction — returns absolute URLs regardless of href format
+    try:
+        in_links = page.evaluate("""
+            () => Array.from(document.querySelectorAll('a[href]'))
+                .map(a => a.href)
+                .filter(h => h && h.includes('/in/') && !h.includes('/sales/') && !h.includes('/mynetwork/'))
+        """)
+        for href in in_links:
+            href = href.split("?")[0].rstrip("/")
+            if "/in/" in href and "/sales/" not in href:
+                logger.info("Resolved Sales Nav URL → %s", href)
+                return href
+    except Exception as e:
+        logger.debug("JS link extraction failed: %s", e)
+
+    # Strategy 2: CSS selector fallbacks (original approach)
     for selector in [
         'a[data-anonymize="person-name"][href*="/in/"]',
         'a[href*="linkedin.com/in/"]',
@@ -47,10 +68,22 @@ def _resolve_linkedin_url(page: Page, url: str) -> str:
             href = el.get_attribute("href") or ""
             if href.startswith("/"):
                 href = "https://www.linkedin.com" + href
-            if "/in/" in href:
+            if "/in/" in href and "/sales/" not in href:
                 href = href.split("?")[0]
-                logger.info("Resolved Sales Nav URL → %s", href)
+                logger.info("Resolved Sales Nav URL via CSS → %s", href)
                 return href
+
+    # Strategy 3: Regex scan of full page HTML — catches URLs embedded in JSON or data attributes
+    try:
+        import re
+        html = page.content()
+        matches = re.findall(r'https?://(?:www\.)?linkedin\.com/in/([a-zA-Z0-9\-]+)(?:[/?"\']|$)', html)
+        if matches:
+            resolved = f"https://www.linkedin.com/in/{matches[0]}"
+            logger.info("Resolved Sales Nav URL via HTML scan → %s", resolved)
+            return resolved
+    except Exception as e:
+        logger.debug("HTML scan failed: %s", e)
 
     logger.warning("Could not resolve Sales Nav URL to a regular profile: %s", url)
     return url

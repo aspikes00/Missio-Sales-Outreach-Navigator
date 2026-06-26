@@ -216,6 +216,17 @@ class SequenceOrchestrator:
                 self._try_send_inmail(browser, lead, today, result)
             return True
 
+        # If this is a message stage but the URL is still a Sales Nav URL (resolution failed),
+        # skip gracefully rather than burning 24s on compose box timeouts and tripping the
+        # circuit breaker. The lead stays at its current status and will retry next session.
+        if stage_name != "connection_note" and "/sales/" in action_url:
+            logger.warning(
+                "Skipping %s at stage %s — Sales Nav URL could not be resolved to /in/ URL. "
+                "Will retry next session.",
+                lead.full_name or lead.first_name, stage_name,
+            )
+            return True
+
         try:
             sent = False
             if stage_name == "connection_note":
