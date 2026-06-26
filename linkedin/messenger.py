@@ -187,17 +187,48 @@ def send_direct_message(page: Page, profile_url: str, message: str, humanizer) -
     msg_btn.click()
     time.sleep(random.uniform(1.5, 2.5))
 
-    try:
-        page.wait_for_selector(sel.MESSAGE_COMPOSE_TEXTAREA, timeout=10000)
-    except PWTimeout:
+    # Try multiple compose selectors — Sales Nav may navigate to /messaging/ or open a
+    # different compose UI that uses div[contenteditable] instead of the classic class.
+    compose_el = None
+    for csel, timeout_ms in [
+        (sel.MESSAGE_COMPOSE_TEXTAREA, 10000),              # classic LinkedIn floating chat
+        ('div[contenteditable="true"][data-placeholder]', 8000),  # Sales Nav / new UI
+        ('div[contenteditable="true"]', 6000),              # broad fallback
+    ]:
+        try:
+            el = page.wait_for_selector(csel, timeout=timeout_ms)
+            if el:
+                compose_el = el
+                logger.debug("Compose box found via selector: %s", csel)
+                break
+        except PWTimeout:
+            continue
+
+    if not compose_el:
         raise MessengerError("Message compose box did not open.")
 
-    humanizer.type_text(page, sel.MESSAGE_COMPOSE_TEXTAREA, message)
+    humanizer.type_text(page, None, message, element=compose_el)
     time.sleep(random.uniform(0.8, 1.5))
 
     humanizer.pre_action_pause()
 
-    send_btn = page.wait_for_selector(sel.MESSAGE_SEND_BUTTON, timeout=8000)
+    send_btn = None
+    for ssel, timeout_ms in [
+        (sel.MESSAGE_SEND_BUTTON, 8000),
+        ('button[aria-label*="Send"]', 5000),
+        ('button[type="submit"]:not([disabled])', 4000),
+    ]:
+        try:
+            btn = page.wait_for_selector(ssel, timeout=timeout_ms)
+            if btn:
+                send_btn = btn
+                break
+        except PWTimeout:
+            continue
+
+    if not send_btn:
+        raise MessengerError("Could not find message send button.")
+
     send_btn.click()
     time.sleep(random.uniform(1.5, 3.0))
 

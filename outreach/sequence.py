@@ -271,15 +271,6 @@ class SequenceOrchestrator:
                 if sent:
                     result.connections_sent += 1
             else:
-                # Sales Nav URLs can't be used for direct messaging — the compose interface
-                # is different and our selectors won't find the textarea.  If the URL still
-                # points to Sales Nav it means resolution failed; skip and try next session.
-                if "/sales/lead/" in action_url:
-                    logger.info(
-                        "Cannot direct-message %s — Sales Nav URL unresolvable. Will retry next session.",
-                        lead.full_name or lead.first_name,
-                    )
-                    return True  # Not an error; lead stays connected for next attempt
                 sent = send_direct_message(browser.page, action_url, message, self._humanizer)
                 if not sent:
                     # No Message button on a lead we thought was connected — they likely
