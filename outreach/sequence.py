@@ -186,9 +186,9 @@ class SequenceOrchestrator:
             else lead.linkedin_url
         )
 
-        # Persist resolved URL — if Sales Nav URL resolved to a regular /in/ URL, update the DB
-        # so future sessions go directly to the right page (avoids Sales Nav message failures).
-        if action_url != lead.linkedin_url and "/in/" in action_url and "/sales/" not in action_url:
+        # Persist resolved/cleaned URL — save it even if still Sales Nav (at least the expired
+        # session context is stripped). If a /in/ URL was found, that's even better.
+        if action_url != lead.linkedin_url:
             try:
                 with self._db.transaction() as conn:
                     conn.execute("UPDATE leads SET linkedin_url = ? WHERE id = ?", (action_url, lead.id))
@@ -351,8 +351,9 @@ class SequenceOrchestrator:
             try:
                 from linkedin.scraper import _resolve_linkedin_url
                 check_url = _resolve_linkedin_url(browser.page, lead.linkedin_url)
-                # Persist resolved URL immediately — saves it for the message stage later
-                if "/in/" in check_url and "/sales/" not in check_url and check_url != lead.linkedin_url:
+                # Persist resolved/cleaned URL immediately (even if still Sales Nav — at least
+                # the expired session context is stripped so future navigation works correctly)
+                if check_url != lead.linkedin_url:
                     try:
                         with self._db.transaction() as conn:
                             conn.execute("UPDATE leads SET linkedin_url = ? WHERE id = ?", (check_url, lead.id))

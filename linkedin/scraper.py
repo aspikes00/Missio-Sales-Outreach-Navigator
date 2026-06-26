@@ -33,13 +33,19 @@ def _resolve_linkedin_url(page: Page, url: str) -> str:
     if "/sales/lead/" not in url:
         return url
 
-    page.goto(url, wait_until="domcontentloaded", timeout=20000)
+    # Strip session-context suffix (e.g. ,NAME_SEARCH,xxxx) — these expire and cause redirects
+    import re as _re
+    clean_url = _re.sub(r'(/sales/lead/[^,/?]+),.*', r'\1', url)
+    if clean_url != url:
+        logger.debug("Stripped session context from URL: %s", url)
+
+    page.goto(clean_url, wait_until="domcontentloaded", timeout=20000)
 
     # Wait for the lead page to hydrate — person-name signals content rendered
     try:
         page.wait_for_selector('[data-anonymize="person-name"]', timeout=8000)
     except PWTimeout:
-        pass
+        logger.debug("person-name element not found on Sales Nav page — page may not have loaded correctly")
     time.sleep(random.uniform(1.5, 2.5))
 
     # Strategy 1: JavaScript link extraction — returns absolute URLs regardless of href format
@@ -85,8 +91,9 @@ def _resolve_linkedin_url(page: Page, url: str) -> str:
     except Exception as e:
         logger.debug("HTML scan failed: %s", e)
 
-    logger.warning("Could not resolve Sales Nav URL to a regular profile: %s", url)
-    return url
+    logger.warning("Could not resolve Sales Nav URL to a regular /in/ profile: %s", clean_url)
+    # Return cleaned URL (session context stripped) — better than the expired original
+    return clean_url
 
 
 def scrape_profile(page: Page, profile_url: str) -> Optional[ScrapedProfile]:

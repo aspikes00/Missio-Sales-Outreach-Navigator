@@ -172,7 +172,13 @@ def _normalize_url(href: str) -> str:
     if not href:
         return ""
     if href.startswith("/"):
-        return "https://www.linkedin.com" + href
-    if href.startswith("http"):
-        return href
-    return ""
+        url = "https://www.linkedin.com" + href
+    elif href.startswith("http"):
+        url = href
+    else:
+        return ""
+    # Strip session-context suffix from Sales Nav lead URLs (e.g. ,NAME_SEARCH,xxxx).
+    # These session IDs expire and cause redirect failures when navigated later.
+    import re
+    url = re.sub(r'(/sales/lead/[^,/?]+),.*', r'\1', url)
+    return url
