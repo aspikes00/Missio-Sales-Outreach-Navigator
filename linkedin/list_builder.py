@@ -49,19 +49,25 @@ def populate_list_from_search(
         current_page = start_page + pages_processed
         logger.info("Processing search results page %d...", current_page)
 
-        # Wait for results to render
-        try:
-            page.wait_for_selector(sel.SALES_NAV_SEARCH_RESULT_ROW, timeout=15000)
-        except PWTimeout:
+        # Wait for results to render — try each candidate selector in turn
+        results_loaded = False
+        for candidate in sel.SALES_NAV_SEARCH_RESULT_ROW_CANDIDATES:
+            try:
+                page.wait_for_selector(candidate, timeout=5000)
+                results_loaded = True
+                break
+            except PWTimeout:
+                continue
+        if not results_loaded:
             if page.query_selector(sel.SALES_NAV_NO_RESULTS):
                 logger.info("No more results — search exhausted.")
                 stopped_reason = "no_more_results"
                 break
             raise SelectorOutdatedError(
-                "Could not find search result rows. "
+                "Could not find search result rows with any known selector. "
                 "The Sales Navigator DOM may have changed. "
-                f"Update SALES_NAV_SEARCH_RESULT_ROW in linkedin/selectors.py.\n"
-                f"Current value: {sel.SALES_NAV_SEARCH_RESULT_ROW}"
+                "Update SALES_NAV_SEARCH_RESULT_ROW_CANDIDATES in linkedin/selectors.py.\n"
+                f"Tried: {sel.SALES_NAV_SEARCH_RESULT_ROW_CANDIDATES}"
             )
 
         humanizer.page_scroll(page, scrolls=3)
@@ -135,17 +141,16 @@ def _navigate_to_search(page: Page, search_url: str, start_page: int):
 
 def _select_all_on_page(page: Page) -> bool:
     """Click the 'select all on page' checkbox. Returns True if successful."""
-    # Try the primary selector first
-    for selector in [sel.SALES_NAV_SELECT_ALL_LABEL, sel.SALES_NAV_SELECT_ALL_CHECKBOX]:
+    for selector in sel.SALES_NAV_SELECT_ALL_CANDIDATES:
         el = page.query_selector(selector)
         if el:
             try:
                 el.click()
                 time.sleep(random.uniform(0.8, 1.5))
-                # Verify something got selected
                 count_el = page.query_selector(sel.SALES_NAV_SELECTED_COUNT)
                 if count_el:
                     logger.debug("Selected count indicator: %s", count_el.inner_text().strip())
+                logger.info("Selected all leads via: %s", selector)
                 return True
             except Exception as e:
                 logger.debug("Selector %s failed: %s", selector, e)
@@ -154,7 +159,7 @@ def _select_all_on_page(page: Page) -> bool:
     logger.warning(
         "Could not find 'Select all' checkbox. "
         "LinkedIn may have updated their UI. "
-        f"Check SALES_NAV_SELECT_ALL_LABEL / SALES_NAV_SELECT_ALL_CHECKBOX in selectors.py."
+        f"Tried: {sel.SALES_NAV_SELECT_ALL_CANDIDATES}"
     )
     return False
 
@@ -166,15 +171,16 @@ def _add_selected_to_list(page: Page, list_name: str, humanizer) -> int | None:
     """
     # Find and click the Save to list button
     save_btn = None
-    for selector in [sel.SALES_NAV_SAVE_TO_LIST_BTN, sel.SALES_NAV_SAVE_TO_LIST_BTN_ALT]:
+    for selector in sel.SALES_NAV_SAVE_TO_LIST_CANDIDATES:
         save_btn = page.query_selector(selector)
         if save_btn:
+            logger.debug("Save-to-list button found via: %s", selector)
             break
 
     if not save_btn:
         logger.error(
             "Could not find 'Save to list' button after selecting leads. "
-            "Selectors to check: SALES_NAV_SAVE_TO_LIST_BTN in selectors.py."
+            f"Tried: {sel.SALES_NAV_SAVE_TO_LIST_CANDIDATES}"
         )
         return None
 
@@ -190,9 +196,13 @@ def _add_selected_to_list(page: Page, list_name: str, humanizer) -> int | None:
         logger.debug("List modal selector timed out, trying search input directly...")
 
     # Search for the list by name in the modal input
-    search_input = page.query_selector(sel.SALES_NAV_LIST_SEARCH_INPUT)
+    search_input = None
+    for si_sel in sel.SALES_NAV_LIST_SEARCH_INPUT_CANDIDATES:
+        search_input = page.query_selector(si_sel)
+        if search_input:
+            break
     if search_input:
-        humanizer.type_text(page, sel.SALES_NAV_LIST_SEARCH_INPUT, list_name)
+        humanizer.type_text(page, None, list_name, element=search_input)
         time.sleep(random.uniform(0.8, 1.5))
 
     # Find and click the matching list option
@@ -233,17 +243,17 @@ def _add_selected_to_list(page: Page, list_name: str, humanizer) -> int | None:
 
 def _find_list_option(page: Page, list_name: str):
     """Find the list option element matching list_name (case-insensitive partial match)."""
-    options = page.query_selector_all(sel.SALES_NAV_LIST_OPTION)
     list_name_lower = list_name.lower().strip()
-    for option in options:
-        text = option.inner_text().strip().lower()
-        if list_name_lower in text:
-            return option
-    # If no match on text, try aria-label
-    for option in options:
-        label = (option.get_attribute("aria-label") or "").lower()
-        if list_name_lower in label:
-            return option
+    for option_sel in sel.SALES_NAV_LIST_OPTION_CANDIDATES:
+        options = page.query_selector_all(option_sel)
+        for option in options:
+            text = option.inner_text().strip().lower()
+            if list_name_lower in text:
+                return option
+        for option in options:
+            label = (option.get_attribute("aria-label") or "").lower()
+            if list_name_lower in label:
+                return option
     return None
 
 

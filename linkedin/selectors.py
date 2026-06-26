@@ -111,15 +111,50 @@ SALES_NAV_LEAD_COUNT        = '.artdeco-pill__text'
 # These appear on the /sales/search/people results page.
 # If LinkedIn updates their frontend, update these constants and re-run.
 SALES_NAV_SEARCH_RESULT_ROW = 'li[data-view-name="search-results-lead"]'
+# Ordered candidates — first match wins. LinkedIn periodically renames data-view-name values.
+SALES_NAV_SEARCH_RESULT_ROW_CANDIDATES = [
+    'li[data-view-name="search-results-lead"]',           # original
+    'li[data-view-name="search-results-lead-entity"]',    # entity variant
+    'li[data-view-name="people-search-lead"]',            # people-search variant
+    '[data-view-name*="search-results"][data-view-name*="lead"]',  # broad data-view-name
+    '[data-anonymize="person-name"]',                     # person name links always present in results
+]
 SALES_NAV_SELECT_ALL_CHECKBOX = 'input[data-view-name="search-results-select-all-checkbox"]'
 SALES_NAV_SELECT_ALL_LABEL = 'label[data-view-name="search-results-select-all-label"]'
+# Candidates for the "select all" control
+SALES_NAV_SELECT_ALL_CANDIDATES = [
+    'label[data-view-name="search-results-select-all-label"]',
+    'input[data-view-name="search-results-select-all-checkbox"]',
+    'input[data-view-name*="select-all"]',
+    'label[data-view-name*="select-all"]',
+    'input[aria-label*="Select all"]',
+    'label[aria-label*="Select all"]',
+    'input[aria-label*="select all" i]',
+]
 SALES_NAV_SELECTED_COUNT = '[data-view-name="search-results-selected-count"]'
 SALES_NAV_SAVE_TO_LIST_BTN = 'button[data-view-name="search-results-save-to-list"]'
 # Fallback button text matches (LinkedIn sometimes uses text-based buttons)
 SALES_NAV_SAVE_TO_LIST_BTN_ALT = 'button:has-text("Save to list")'
+SALES_NAV_SAVE_TO_LIST_CANDIDATES = [
+    'button[data-view-name="search-results-save-to-list"]',
+    'button[aria-label*="Save to list"]',
+    'button:has-text("Save to list")',
+    'button:has-text("Add to list")',
+]
 SALES_NAV_LIST_MODAL = '[data-view-name="save-to-list-modal"]'
 SALES_NAV_LIST_SEARCH_INPUT = '[data-view-name="save-to-list-search-input"]'
+SALES_NAV_LIST_SEARCH_INPUT_CANDIDATES = [
+    '[data-view-name="save-to-list-search-input"]',
+    'input[placeholder*="Search" i]',
+    'input[aria-label*="Search" i]',
+]
 SALES_NAV_LIST_OPTION = '[data-view-name="save-to-list-option"]'
+SALES_NAV_LIST_OPTION_CANDIDATES = [
+    '[data-view-name="save-to-list-option"]',
+    '[role="option"]',
+    '[role="listitem"]',
+    '.artdeco-list__item',
+]
 SALES_NAV_LIST_SAVE_BTN = 'button[data-view-name="save-to-list-save-button"]'
 SALES_NAV_LIST_SAVE_BTN_ALT = 'button:has-text("Save")'
 SALES_NAV_SEARCH_TOTAL_COUNT = '[data-view-name="search-results-total-count"]'
