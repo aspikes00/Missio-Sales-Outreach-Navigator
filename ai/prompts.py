@@ -40,6 +40,12 @@ _CTA_INSTRUCTIONS = {
         "Position it as low-commitment: 'free to try', 'no obligation', 'see it yourself'. "
         "Include the signup link naturally — frame it as an easy next step if the pain resonates."
     ),
+    "calculator": (
+        "The call-to-action is a free marketing calculator they can use on their own time — no call required. "
+        "Frame it as a useful tool, not a lead generation step: 'built a calculator that shows what this looks like in your own numbers.' "
+        "Include the calculator URL on its own line — clean and visible, not buried in a sentence. "
+        "Never mention booking a call or Calendly. The calculator IS the entire ask."
+    ),
 }
 
 STAGE_INSTRUCTIONS = {

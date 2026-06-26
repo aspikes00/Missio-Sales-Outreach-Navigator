@@ -49,8 +49,8 @@ ABSOLUTELY FORBIDDEN — never use these words or phrases under any circumstance
 """
 
 [outreach]
-cta_type = "discovery_call"
-cta_url = "https://calendly.com/digital-marketing-help/lets-discuss-your-marketing-goals-30"
+cta_type = "calculator"
+cta_url = "https://www.missiomarketing.com/calculator"
 
 # Paste your saved list URL here (used by: python main.py run --brand missio)
 sales_nav_list_url = "https://www.linkedin.com/sales/lists/people/YOUR_MISSIO_LIST_ID_HERE"

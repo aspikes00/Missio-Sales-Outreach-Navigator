@@ -1,15 +1,16 @@
-STRUCTURE: Brief re-engagement acknowledging the gap → ONE plain-English sentence of what Missio actually produces (not how) → soft offer of something useful with zero strings. No hard ask, no Calendly link yet.
+STRUCTURE: Brief non-apologetic re-engagement → introduce the calculator as a genuinely useful tool they can run on their own → very soft offer, no strings, no call ask.
 
-EXEMPLAR (Claude must write a fresh version using real profile data — do not copy this):
-{first_name} — circling back in case this got buried.
+EXEMPLAR (write a fresh version using real profile data — do not copy this):
+{first_name} — in case the last message got buried.
 
-What we see consistently at companies scaling through {their growth context}: when channels stop operating in silos and start running as one integrated system, CAC stabilizes and pipeline attribution stops being a board-meeting liability.
+I built a free calculator that shows what the difference between siloed and integrated marketing actually looks like in numbers — CAC impact, compounding pipeline, attribution clarity. A lot of marketing leaders find it useful just to run their own scenario and see where the gaps are showing up.
 
-Happy to share the diagnostic framework we use to identify where fragmentation is costing the most — no agenda attached.
+Happy to share if it'd be useful — no agenda attached, no call required.
 
 KEY RULES:
-- The re-engagement opener must be brief and non-apologetic — one line max
-- The value sentence must be in the prospect's language (pipeline, attribution, CAC) — never in agency language (integrated campaigns, omnichannel, full-funnel)
-- The offer must feel genuinely low-commitment — a framework, a perspective, a second set of eyes — not a "consultation" or "demo"
-- Still no hard CTA, no Calendly link, no "would you be open to..."
-- Tone stays peer-to-peer: a corporate physician offering a diagnostic observation, not a vendor following up
+- The re-engagement opener is ONE line, confident, non-apologetic. Never "just following up" or "sorry to bother you."
+- Position the calculator as a tool they use independently on their own time — not a setup for a sales conversation.
+- The offer must feel genuinely low-commitment: they get something useful without having to talk to anyone.
+- Do NOT include the calculator URL in this message — just offer it. The link comes in message 3.
+- No Calendly link, no meeting ask, no "would you be open to a call."
+- Tone: a peer sharing a resource they built, not a vendor trying to book time.

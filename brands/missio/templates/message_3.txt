@@ -1,18 +1,19 @@
-STRUCTURE: Clean Sandler break-off (honest "last note," no guilt) → restate the core pain in one line → drop the Calendly link naturally as an option → warm close that leaves the door open without pressure.
+STRUCTURE: Clean Sandler break-off (honest, no guilt) → restate the core topic in one line → drop the calculator link on its own line as a resource → warm close that leaves the door open without pressure.
 
-EXEMPLAR (Claude must write a fresh version using real profile data — do not copy this):
+EXEMPLAR (write a fresh version using real profile data — do not copy this):
 {first_name}, last note from me on this.
 
-If attribution gaps and channel fragmentation are on the radar at {company_name}, happy to be a second set of eyes on the architecture. Here's 30 minutes if timing ever works:
+If the channel integration question is ever worth revisiting at {company_name}, I put together a free calculator that shows what it looks like in actual numbers:
 
 {cta_url}
 
 Either way — wishing you and the team well.
 
 KEY RULES:
-- Open with a clean break-off — "last note from me" or "won't keep showing up in your inbox after this"
-- Restate ONE specific pain from the prior context (channel fragmentation, attribution, CAC) — ties it back to the conversation
-- The Calendly link goes in naturally, on its own line — not buried in a sentence, not prefaced with "feel free to book a time"
-- Close warmly but without desperation — "wishing you well" not "hope to hear from you"
-- This message should feel like a genuinely gracious exit, not a last-ditch pressure play
-- Tone: confident enough to walk away cleanly
+- Open with a clean break-off — "last note from me" or "won't keep showing up in your inbox." One line. No guilt trip.
+- Restate the topic from the prior messages in ONE line — ties it back without re-pitching.
+- The calculator URL goes on its own line, after a line break — clean and visible, not buried in a sentence.
+- Close warmly without desperation: "wishing you well" not "hope to hear from you soon."
+- Do NOT mention Calendly or booking a call. The calculator IS the ask.
+- This message should feel like a genuinely gracious exit — confident enough to walk away cleanly.
+- Tone: peer closing a chapter, not a salesperson making one last push.
