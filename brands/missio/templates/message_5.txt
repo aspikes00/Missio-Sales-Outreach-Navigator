@@ -1,0 +1,18 @@
+STRUCTURE: Clean Sandler break-off (honest, zero guilt) → one-line restatement of the offer — informal conversation, no agenda → Calendly link on its own line → warm permanent close.
+
+EXEMPLAR (write a fresh version using real profile data — do not copy this):
+{first_name}, last one from me — promise.
+
+If you'd ever want 20 minutes to swap notes with someone who thinks about marketing integration differently, the door's open:
+
+{calendly_url}
+
+Wishing you and the {company_name} team well.
+
+KEY RULES:
+- Open with a clean break-off: "last one from me" or "won't keep showing up in your inbox." One line. No guilt, no "I know you're busy."
+- Restate the offer in the simplest possible terms: an informal conversation, no agenda, no pitch
+- The Calendly link goes on its own line, clean and easy to see — not buried in a sentence, not prefaced with "feel free to book a time"
+- Close warmly and permanently: "wishing you well" — leave the door open without any trace of desperation
+- This is the last message — it should feel like a genuinely gracious exit from someone comfortable walking away
+- Tone: confident, warm, done

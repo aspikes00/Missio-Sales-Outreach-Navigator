@@ -25,6 +25,8 @@ CHAR_LIMITS = {
     "message_1": 1000,
     "message_2": 800,
     "message_3": 700,
+    "message_4": 700,
+    "message_5": 600,
     "inmail_subject": 60,
     "inmail_body": 600,
 }
@@ -78,11 +80,28 @@ STAGE_INSTRUCTIONS = {
         "End with a very soft ask: 'worth a quick conversation, or not the right timing?'"
     ),
     "message_3": (
-        "Write the final message in the sequence (no reply to message 2, 6–7 days later). "
-        "Make it clear this is your last outreach — no guilt, just honest. "
-        "Restate the pain point in one line. "
+        "Write the third message in the sequence (no reply to message 2, 5–6 days later). "
+        "This is NOT the final message — do not use break-off language like 'last note from me.' "
+        "Drop the calculator link cleanly. Keep it brief and low-pressure. "
         "{cta_instruction} "
-        "Close warmly — leave the door open without pressure."
+        "Close warmly but leave room for the conversation to continue."
+    ),
+    "message_4": (
+        "Write the fourth message (no reply to message 3, 5–6 days later). "
+        "Acknowledge the calculator may not be relevant if they don't run paid ads — don't assume. "
+        "Pivot to the real value: a brief informal conversation between two people in the same world. "
+        "Use equal-status language — you're not asking them to do you a favor, you're offering a genuine exchange. "
+        "The tone should feel like a coffee chat invite, not a sales discovery call. "
+        "{cta_instruction} "
+        "Close with a soft out — 'totally fine if not the right time.'"
+    ),
+    "message_5": (
+        "Write the final message in the sequence (no reply to message 4, 5–6 days later). "
+        "Clean Sandler break-off — honest, no guilt, no desperation. "
+        "One line restating the offer: a quick informal conversation, no agenda. "
+        "{cta_instruction} "
+        "Close warmly and leave the door permanently open — 'if timing ever changes.' "
+        "This should feel like a gracious exit from someone confident enough to walk away."
     ),
 }
 
@@ -98,14 +117,20 @@ def build_prompt(
     brand_value_prop: str,
     brand_voice_notes: str,
     prior_messages: list[str] | None = None,
+    calendly_url: str = "",
 ) -> str:
     char_limit = CHAR_LIMITS.get(stage, 1000)
-    cta_instruction = _CTA_INSTRUCTIONS.get(cta_type, _CTA_INSTRUCTIONS["discovery_call"])
+    # Messages 4 and 5 push toward the Calendly booking — use discovery_call CTA instructions
+    effective_cta_type = "discovery_call" if stage in ("message_4", "message_5") else cta_type
+    effective_cta_url = calendly_url if stage in ("message_4", "message_5") and calendly_url else cta_url
+    cta_instruction = _CTA_INSTRUCTIONS.get(effective_cta_type, _CTA_INSTRUCTIONS["discovery_call"])
 
     stage_instruction = STAGE_INSTRUCTIONS[stage].format(
         char_limit=char_limit,
         cta_instruction=cta_instruction,
     )
+
+    active_cta_url = effective_cta_url
 
     posts_block = ""
     if lead.recent_posts:
@@ -132,8 +157,8 @@ SENDER'S BRAND CONTEXT (awareness only — do not copy-paste into the message):
 Brand: {brand_name}
 Who we are: {brand_description}
 What we produce: {brand_value_prop}
-CTA type: {cta_type}
-CTA URL: {cta_url}
+CTA type: {effective_cta_type}
+CTA URL: {active_cta_url}
 {voice_block}
 
 LEAD PROFILE:

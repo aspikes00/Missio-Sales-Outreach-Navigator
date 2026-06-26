@@ -40,7 +40,9 @@ STAGE_TRANSITIONS = {
     "connected":          ("message_1", "stage_1_sent"),
     "stage_1_sent":       ("message_2", "stage_2_sent"),
     "stage_2_sent":       ("message_3", "stage_3_sent"),
-    "stage_3_sent":       (None, "not_interested"),
+    "stage_3_sent":       ("message_4", "stage_4_sent"),
+    "stage_4_sent":       ("message_5", "stage_5_sent"),
+    "stage_5_sent":       (None, "not_interested"),
 }
 
 TEMPLATE_FOR_STAGE = {
@@ -48,6 +50,8 @@ TEMPLATE_FOR_STAGE = {
     "message_1":       "message_1.txt",
     "message_2":       "message_2.txt",
     "message_3":       "message_3.txt",
+    "message_4":       "message_4.txt",
+    "message_5":       "message_5.txt",
 }
 
 

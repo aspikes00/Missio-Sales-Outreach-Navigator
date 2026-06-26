@@ -7,10 +7,12 @@ from database.models import DailyStats, Lead, OutreachLog
 
 # Days to wait between each stage touch
 STAGE_WAIT_DAYS = {
-    "connected": 0,
-    "stage_1_sent": 3,
-    "stage_2_sent": 3,
-    "stage_3_sent": 1,
+    "connected":          0,   # message_1 same day connection accepted
+    "stage_1_sent":       3,   # message_2 at day 3
+    "stage_2_sent":       3,   # message_3 at day 6
+    "stage_3_sent":       5,   # message_4 at day 11
+    "stage_4_sent":       5,   # message_5 at day 16
+    "stage_5_sent":       7,   # mark not_interested at day 23
     "connection_pending": 21,
 }
 
@@ -221,7 +223,7 @@ def get_active_days_count(conn: sqlite3.Connection, brand: str) -> int:
 
 
 def get_active_lead_urls_for_brand(conn: sqlite3.Connection, brand: str) -> list[str]:
-    active_statuses = ("stage_1_sent", "stage_2_sent", "stage_3_sent", "connected")
+    active_statuses = ("connected", "stage_1_sent", "stage_2_sent", "stage_3_sent", "stage_4_sent", "stage_5_sent")
     urls = []
     for status in active_statuses:
         rows = conn.execute(

@@ -1,19 +1,19 @@
-STRUCTURE: Clean Sandler break-off (honest, no guilt) → restate the core topic in one line → drop the calculator link on its own line as a resource → warm close that leaves the door open without pressure.
+STRUCTURE: Brief non-apologetic re-engagement → drop the calculator link cleanly on its own line → very soft offer with no strings. This is NOT the final message — do not use break-off language.
 
 EXEMPLAR (write a fresh version using real profile data — do not copy this):
-{first_name}, last note from me on this.
+{first_name} — in case the last message got buried.
 
-If the channel integration question is ever worth revisiting at {company_name}, I put together a free calculator that shows what it looks like in actual numbers:
+If you ever want to run your own numbers on what integrated vs. siloed channels looks like for {company_name}, I built a free calculator for it:
 
 {cta_url}
 
-Either way — wishing you and the team well.
+No agenda — just a tool that might be useful.
 
 KEY RULES:
-- Open with a clean break-off — "last note from me" or "won't keep showing up in your inbox." One line. No guilt trip.
-- Restate the topic from the prior messages in ONE line — ties it back without re-pitching.
-- The calculator URL goes on its own line, after a line break — clean and visible, not buried in a sentence.
-- Close warmly without desperation: "wishing you well" not "hope to hear from you soon."
-- Do NOT mention Calendly or booking a call. The calculator IS the ask.
-- This message should feel like a genuinely gracious exit — confident enough to walk away cleanly.
-- Tone: peer closing a chapter, not a salesperson making one last push.
+- The re-engagement opener is ONE line, confident, non-apologetic. Never "just following up."
+- The calculator URL goes on its own line — clean and visible, not buried in a sentence
+- Keep the offer genuinely low-commitment: a tool they use on their own time, no call needed
+- Do NOT use "last note from me" or any break-off language — this is not the final message
+- Do NOT include a Calendly link — that comes later
+- Keep it short: 3–4 lines total
+- Tone: peer dropping off something useful, not a vendor following up

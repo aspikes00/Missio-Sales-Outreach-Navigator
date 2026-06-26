@@ -36,6 +36,7 @@ class MessageGenerator:
             brand_value_prop=brand.value_prop,
             brand_voice_notes=brand.voice_notes,
             prior_messages=prior_messages,
+            calendly_url=brand.calendly_url,
         )
 
         message = self._call_api(prompt)

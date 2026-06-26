@@ -40,8 +40,9 @@ class BrandConfig:
     description: str
     value_prop: str
     voice_notes: str     # brand-specific voice, forbidden phrases, pain language
-    cta_type: str        # "discovery_call" | "free_trial"
+    cta_type: str        # "discovery_call" | "free_trial" | "calculator"
     cta_url: str
+    calendly_url: str
     sales_nav_list_url: str
     sales_nav_list_name: str   # exact list name as it appears in Sales Navigator
     sales_nav_search_url: str  # search URL with ICP filters pre-applied (for populate-list)
@@ -120,6 +121,7 @@ class Settings:
             voice_notes=b.get("voice_notes", ""),
             cta_type=o["cta_type"],
             cta_url=o["cta_url"],
+            calendly_url=o.get("calendly_url", o["cta_url"]),
             sales_nav_list_url=o.get("sales_nav_list_url", ""),
             sales_nav_list_name=o.get("sales_nav_list_name", ""),
             sales_nav_search_url=o.get("sales_nav_search_url", ""),
