@@ -56,7 +56,7 @@ class Humanizer:
         """Short pause before clicking — simulates cursor travel time."""
         time.sleep(random.uniform(0.8, 2.5))
 
-    def page_scroll(self, page: Page, scrolls: int = 4):
+    def page_scroll(self, page: Page, scrolls: int = 2):
         """Scroll the page slowly to simulate reading behavior."""
         for _ in range(scrolls):
             page.mouse.wheel(0, random.randint(250, 550))

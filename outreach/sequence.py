@@ -123,6 +123,7 @@ class SequenceOrchestrator:
                     logger.warning("Session halted: %s", status.value)
                     break
 
+                actions_before = result.connections_sent + result.messages_sent
                 success = self._execute_action(browser, lead, today, result)
                 if success:
                     self._watchdog.record_success()
@@ -131,7 +132,12 @@ class SequenceOrchestrator:
                     result.errors += 1
 
                 if not self._dry_run:
-                    self._humanizer.between_action_delay()
+                    if result.connections_sent + result.messages_sent > actions_before:
+                        # A real send happened — use the full human-paced delay
+                        self._humanizer.between_action_delay()
+                    else:
+                        # Skip / reclassify / error — short courtesy pause, don't burn time
+                        time.sleep(random.uniform(5, 15))
 
         logger.info(
             "[%s] Session complete — connections: %d, messages: %d, replies: %d, accepted: %d, reclassified: %d, errors: %d",
