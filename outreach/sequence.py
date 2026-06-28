@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 STAGE_TRANSITIONS = {
     "not_contacted":      ("connection_note", "connection_pending"),
-    "connection_pending": None,
+    "connection_pending": (None, "not_interested"),  # 21 days with no acceptance → give up
     "connected":          ("message_1", "stage_1_sent"),
     "stage_1_sent":       ("message_2", "stage_2_sent"),
     "stage_2_sent":       ("message_3", "stage_3_sent"),

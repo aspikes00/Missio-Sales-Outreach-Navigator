@@ -7,6 +7,8 @@ from database.models import Lead
 from database.queries import (
     get_active_days_count,
     get_leads_due_for_outreach,
+    get_message_due_leads,
+    get_not_contacted_leads,
     get_or_create_daily_stats,
 )
 
@@ -37,18 +39,42 @@ class Scheduler:
             logger.info("[%s] Daily limit reached (%d actions). No more sends today.", brand, effective_limit)
             return []
 
-        with db.transaction() as conn:
-            candidates = get_leads_due_for_outreach(conn, today, limit=remaining * 3, brand=brand)
+        in_warmup = active_days <= self._warmup_days
 
-        if not candidates:
-            logger.info("[%s] No leads due for outreach today.", brand)
-            return []
+        if in_warmup:
+            # During warmup connections and messages share a single pool
+            with db.transaction() as conn:
+                candidates = get_leads_due_for_outreach(conn, today, limit=remaining * 3, brand=brand)
+            if not candidates:
+                logger.info("[%s] No leads due for outreach today.", brand)
+                return []
+            random.shuffle(candidates)
+            queue = candidates[:remaining]
+        else:
+            # Post-warmup: reserve dedicated slots for connections and messages so neither
+            # starves the other. Previously a shuffled combined pool let message-due leads
+            # crowd out not_contacted leads, causing only 3 connections per day.
+            conn_remaining = max(0, self._connection_limit - stats.connections_sent)
+            msg_remaining = max(0, self._message_limit - stats.messages_sent)
 
-        random.shuffle(candidates)
-        queue = candidates[:remaining]
+            with db.transaction() as conn:
+                conn_leads = get_not_contacted_leads(conn, brand, limit=conn_remaining)
+                msg_leads = get_message_due_leads(conn, today, brand, limit=msg_remaining)
+
+            random.shuffle(conn_leads)
+            random.shuffle(msg_leads)
+            queue = conn_leads[:conn_remaining] + msg_leads[:msg_remaining]
+            random.shuffle(queue)
+
+            if not queue:
+                logger.info("[%s] No leads due for outreach today.", brand)
+                return []
+
+        conn_count = sum(1 for l in queue if l.status == "not_contacted")
+        msg_count = len(queue) - conn_count
         logger.info(
-            "[%s] Queue built: %d leads (effective limit: %d, already sent: %d)",
-            brand, len(queue), effective_limit, stats.total_sent,
+            "[%s] Queue built: %d leads (%d connections, %d messages, effective limit: %d, already sent: %d)",
+            brand, len(queue), conn_count, msg_count, effective_limit, stats.total_sent,
         )
         return queue
 

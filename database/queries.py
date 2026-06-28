@@ -46,6 +46,40 @@ def get_leads_due_for_outreach(
     return [Lead.from_row(tuple(r)) for r in rows[:limit]]
 
 
+def get_not_contacted_leads(conn: sqlite3.Connection, brand: str, limit: int) -> list[Lead]:
+    """Leads ready for a first connection request."""
+    rows = conn.execute(
+        "SELECT * FROM leads WHERE brand = ? AND status = 'not_contacted' ORDER BY id DESC LIMIT ?",
+        (brand, limit),
+    ).fetchall()
+    return [Lead.from_row(tuple(r)) for r in rows]
+
+
+def get_message_due_leads(conn: sqlite3.Connection, today: str, brand: str, limit: int) -> list[Lead]:
+    """Leads due for a follow-up message (connected or stage_1-5_sent, past their wait period)."""
+    message_statuses = {
+        k: v for k, v in STAGE_WAIT_DAYS.items()
+        if k not in ("connection_pending",)
+    }
+    rows = []
+    for status, wait_days in message_statuses.items():
+        if len(rows) >= limit:
+            break
+        cutoff = (datetime.strptime(today, "%Y-%m-%d") - timedelta(days=wait_days)).strftime("%Y-%m-%d")
+        cur = conn.execute(
+            """
+            SELECT * FROM leads
+            WHERE brand = ? AND status = ?
+              AND (last_activity_at IS NULL OR date(last_activity_at) <= ?)
+            ORDER BY last_activity_at ASC
+            LIMIT ?
+            """,
+            (brand, status, cutoff, limit - len(rows)),
+        )
+        rows.extend(cur.fetchall())
+    return [Lead.from_row(tuple(r)) for r in rows[:limit]]
+
+
 def get_lead_by_url(conn: sqlite3.Connection, linkedin_url: str) -> Optional[Lead]:
     row = conn.execute("SELECT * FROM leads WHERE linkedin_url = ?", (linkedin_url,)).fetchone()
     return Lead.from_row(tuple(row)) if row else None
