@@ -184,13 +184,17 @@ class SequenceOrchestrator:
         except Exception as e:
             logger.warning("Profile refresh failed for %s: %s", lead.linkedin_url, e)
 
-        # After scraping, the browser may be on the resolved regular /in/ URL — use it for actions
-        _current = browser.page.url
-        action_url = (
-            _current.split("?")[0]
-            if "/in/" in _current and "/sales/" not in _current
-            else lead.linkedin_url
-        )
+        # Use whatever URL the browser is currently on after scraping — _resolve_linkedin_url
+        # already stripped the expired session context, so this is always cleaner than
+        # lead.linkedin_url (which may still have the old ,NAME_SEARCH,xxx suffix in the DB).
+        # Only fall back to lead.linkedin_url if the browser ended up somewhere unexpected.
+        _current = browser.page.url.split("?")[0]
+        if "/in/" in _current and "/sales/" not in _current:
+            action_url = _current          # resolved to a regular profile — best case
+        elif "/sales/lead/" in _current:
+            action_url = _current          # still Sales Nav but session context is stripped
+        else:
+            action_url = lead.linkedin_url  # unexpected page — use DB value as fallback
 
         # Persist resolved/cleaned URL — save it even if still Sales Nav (at least the expired
         # session context is stripped). If a /in/ URL was found, that's even better.
