@@ -164,7 +164,7 @@ class SequenceOrchestrator:
         history = self._get_prior_messages(lead.id)
 
         try:
-            profile = scrape_profile(browser.page, lead.linkedin_url)
+            profile = scrape_profile(browser.page, lead.linkedin_url, lead.full_name or "")
             if profile:
                 with self._db.transaction() as conn:
                     update_lead_profile(
@@ -360,7 +360,7 @@ class SequenceOrchestrator:
         for lead in pending:
             try:
                 from linkedin.scraper import _resolve_linkedin_url
-                check_url = _resolve_linkedin_url(browser.page, lead.linkedin_url)
+                check_url = _resolve_linkedin_url(browser.page, lead.linkedin_url, lead.full_name or "")
                 # Persist resolved/cleaned URL immediately (even if still Sales Nav — at least
                 # the expired session context is stripped so future navigation works correctly)
                 if check_url != lead.linkedin_url:

@@ -28,7 +28,7 @@ class ScrapedProfile:
     connection_degree: str = ""
 
 
-def _resolve_linkedin_url(page: Page, url: str) -> str:
+def _resolve_linkedin_url(page: Page, url: str, full_name: str = "") -> str:
     """If url is a Sales Navigator lead URL, find and return the regular linkedin.com/in/ URL."""
     if "/sales/lead/" not in url:
         return url
@@ -91,15 +91,40 @@ def _resolve_linkedin_url(page: Page, url: str) -> str:
     except Exception as e:
         logger.debug("HTML scan failed: %s", e)
 
+    # Strategy 4: LinkedIn people search by name — Sales Nav lead pages don't expose /in/ links
+    # in their DOM, so we search regular LinkedIn using the stored full_name as a fallback.
+    if full_name and full_name.strip():
+        try:
+            import urllib.parse
+            search_url = (
+                "https://www.linkedin.com/search/results/people/"
+                f"?keywords={urllib.parse.quote(full_name.strip())}"
+            )
+            page.goto(search_url, wait_until="domcontentloaded", timeout=15000)
+            time.sleep(random.uniform(1.5, 2.5))
+
+            in_links = page.evaluate("""
+                () => Array.from(document.querySelectorAll('a[href*="/in/"]'))
+                    .map(a => a.href)
+                    .filter(h => h && !h.includes('/sales/') && !h.includes('/mynetwork/') && !h.includes('/search/'))
+            """)
+            for href in in_links:
+                href = href.split("?")[0].rstrip("/")
+                if "/in/" in href and "/sales/" not in href:
+                    logger.info("Resolved Sales Nav URL via name search ('%s') → %s", full_name, href)
+                    return href
+        except Exception as e:
+            logger.debug("Name search fallback failed: %s", e)
+
     logger.warning("Could not resolve Sales Nav URL to a regular /in/ profile: %s", clean_url)
     # Return cleaned URL (session context stripped) — better than the expired original
     return clean_url
 
 
-def scrape_profile(page: Page, profile_url: str) -> Optional[ScrapedProfile]:
+def scrape_profile(page: Page, profile_url: str, full_name: str = "") -> Optional[ScrapedProfile]:
     logger.info("Scraping profile: %s", profile_url)
 
-    resolved_url = _resolve_linkedin_url(page, profile_url)
+    resolved_url = _resolve_linkedin_url(page, profile_url, full_name)
 
     if page.url != resolved_url:
         page.goto(resolved_url, wait_until="domcontentloaded", timeout=20000)
