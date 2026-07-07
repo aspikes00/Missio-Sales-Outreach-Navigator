@@ -174,9 +174,17 @@ def get_outreach_history(conn: sqlite3.Connection, lead_id: int) -> list[Outreac
     return [OutreachLog.from_row(tuple(r)) for r in rows]
 
 
+# Explicit column list keeps from_row positional mapping stable regardless of
+# when inmails_sent was added via ALTER TABLE migration vs created fresh from schema.
+_DAILY_STATS_SELECT = (
+    "id, date, brand, connections_sent, messages_sent, replies_received, "
+    "bookings_detected, session_duration_mins, errors_encountered, inmails_sent"
+)
+
+
 def get_or_create_daily_stats(conn: sqlite3.Connection, today: str, brand: str) -> DailyStats:
     row = conn.execute(
-        "SELECT * FROM daily_stats WHERE date = ? AND brand = ?", (today, brand)
+        f"SELECT {_DAILY_STATS_SELECT} FROM daily_stats WHERE date = ? AND brand = ?", (today, brand)
     ).fetchone()
     if row:
         return DailyStats.from_row(tuple(row))
@@ -184,7 +192,7 @@ def get_or_create_daily_stats(conn: sqlite3.Connection, today: str, brand: str) 
         "INSERT OR IGNORE INTO daily_stats (date, brand) VALUES (?, ?)", (today, brand)
     )
     row = conn.execute(
-        "SELECT * FROM daily_stats WHERE date = ? AND brand = ?", (today, brand)
+        f"SELECT {_DAILY_STATS_SELECT} FROM daily_stats WHERE date = ? AND brand = ?", (today, brand)
     ).fetchone()
     return DailyStats.from_row(tuple(row))
 
@@ -194,12 +202,12 @@ def get_daily_stats_range(
 ) -> list[DailyStats]:
     if brand:
         rows = conn.execute(
-            "SELECT * FROM daily_stats WHERE date >= ? AND date <= ? AND brand = ? ORDER BY date ASC",
+            f"SELECT {_DAILY_STATS_SELECT} FROM daily_stats WHERE date >= ? AND date <= ? AND brand = ? ORDER BY date ASC",
             (start_date, end_date, brand),
         ).fetchall()
     else:
         rows = conn.execute(
-            "SELECT * FROM daily_stats WHERE date >= ? AND date <= ? ORDER BY date, brand ASC",
+            f"SELECT {_DAILY_STATS_SELECT} FROM daily_stats WHERE date >= ? AND date <= ? ORDER BY date, brand ASC",
             (start_date, end_date),
         ).fetchall()
     return [DailyStats.from_row(tuple(r)) for r in rows]
@@ -207,7 +215,7 @@ def get_daily_stats_range(
 
 def get_all_brands_daily_stats(conn: sqlite3.Connection, today: str) -> list[DailyStats]:
     rows = conn.execute(
-        "SELECT * FROM daily_stats WHERE date = ? ORDER BY brand ASC", (today,)
+        f"SELECT {_DAILY_STATS_SELECT} FROM daily_stats WHERE date = ? ORDER BY brand ASC", (today,)
     ).fetchall()
     return [DailyStats.from_row(tuple(r)) for r in rows]
 
