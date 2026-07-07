@@ -12,6 +12,11 @@ from database.models import Lead
 logger = logging.getLogger(__name__)
 
 
+def _strip_em_dashes(text: str) -> str:
+    """Replace em dashes (—) and double hyphens (--) with a regular dash or comma."""
+    return text.replace("—", " - ").replace("--", " - ")
+
+
 class MessageGenerator:
     def __init__(self, api_key: str, model: str = "claude-sonnet-4-6"):
         self._client = anthropic.Anthropic(api_key=api_key)
@@ -52,6 +57,7 @@ class MessageGenerator:
                          f"Rewrite it to be UNDER {char_limit} characters. Count carefully."
             )
 
+        message = _strip_em_dashes(message)
         logger.info("Generated %s message for %s (%d chars)", stage, lead.full_name, len(message))
         return message.strip()
 
@@ -91,6 +97,8 @@ class MessageGenerator:
         if not subject:
             subject = f"Fellow believer in {lead.title or 'marketing'}"
 
+        subject = _strip_em_dashes(subject)
+        body = _strip_em_dashes(body)
         logger.info("Generated InMail for %s — subject: %s (%d chars), body: %d chars",
                     lead.full_name, subject, len(subject), len(body))
         return subject, body
