@@ -93,6 +93,8 @@ def _resolve_linkedin_url(page: Page, url: str, full_name: str = "") -> str:
 
     # Strategy 4: LinkedIn people search by name — Sales Nav lead pages don't expose /in/ links
     # in their DOM, so we search regular LinkedIn using the stored full_name as a fallback.
+    # We extract name+url pairs and verify the name loosely matches before accepting the URL,
+    # to avoid sending messages addressed to "Belinda" to a completely different person.
     if full_name and full_name.strip():
         try:
             import urllib.parse
@@ -103,16 +105,31 @@ def _resolve_linkedin_url(page: Page, url: str, full_name: str = "") -> str:
             page.goto(search_url, wait_until="domcontentloaded", timeout=15000)
             time.sleep(random.uniform(1.5, 2.5))
 
-            in_links = page.evaluate("""
+            results = page.evaluate("""
                 () => Array.from(document.querySelectorAll('a[href*="/in/"]'))
-                    .map(a => a.href)
-                    .filter(h => h && !h.includes('/sales/') && !h.includes('/mynetwork/') && !h.includes('/search/'))
+                    .map(a => ({href: a.href, name: (a.textContent || '').trim()}))
+                    .filter(r => r.href
+                        && !r.href.includes('/sales/')
+                        && !r.href.includes('/mynetwork/')
+                        && !r.href.includes('/search/'))
             """)
-            for href in in_links:
-                href = href.split("?")[0].rstrip("/")
-                if "/in/" in href and "/sales/" not in href:
-                    logger.info("Resolved Sales Nav URL via name search ('%s') → %s", full_name, href)
+            # Use the first result whose visible name shares at least one word with the
+            # searched name (case-insensitive). This blocks gross mismatches like
+            # "Belinda" resolving to Tyler D. Carrigan.
+            name_words = {w.lower() for w in full_name.split() if len(w) > 2}
+            for r in results:
+                href = (r.get("href") or "").split("?")[0].rstrip("/")
+                if "/in/" not in href or "/sales/" in href:
+                    continue
+                result_name = r.get("name") or ""
+                result_words = {w.lower() for w in result_name.split() if len(w) > 2}
+                if name_words & result_words:  # at least one word overlaps
+                    logger.info(
+                        "Resolved Sales Nav URL via name search ('%s') → %s (result name: '%s')",
+                        full_name, href, result_name,
+                    )
                     return href
+            logger.debug("Name search for '%s' found no name-matching result", full_name)
         except Exception as e:
             logger.debug("Name search fallback failed: %s", e)
 
@@ -132,7 +149,24 @@ def scrape_profile(page: Page, profile_url: str, full_name: str = "") -> Optiona
 
     profile = ScrapedProfile(linkedin_url=profile_url)
 
-    profile.full_name = _safe_text(page, sel.PROFILE_NAME)
+    # Wait for the name heading to render before extracting — LinkedIn lazy-loads profile cards.
+    _NAME_CANDIDATES = [
+        'h1.text-heading-xlarge',
+        'h1[class*="text-heading"]',
+        'h1',
+    ]
+    for _ns in _NAME_CANDIDATES:
+        try:
+            page.wait_for_selector(_ns, timeout=5000)
+            break
+        except PWTimeout:
+            continue
+
+    for _ns in _NAME_CANDIDATES:
+        profile.full_name = _safe_text(page, _ns)
+        if profile.full_name:
+            break
+
     if profile.full_name:
         parts = profile.full_name.strip().split(" ", 1)
         profile.first_name = parts[0]

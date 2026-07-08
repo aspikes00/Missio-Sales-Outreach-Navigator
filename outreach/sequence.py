@@ -166,21 +166,32 @@ class SequenceOrchestrator:
         try:
             profile = scrape_profile(browser.page, lead.linkedin_url, lead.full_name or "")
             if profile:
+                profile_update = dict(
+                    headline=profile.headline,
+                    about_snippet=profile.about_snippet,
+                    recent_post_1=profile.recent_posts[0] if len(profile.recent_posts) > 0 else None,
+                    recent_post_2=profile.recent_posts[1] if len(profile.recent_posts) > 1 else None,
+                    recent_post_3=profile.recent_posts[2] if len(profile.recent_posts) > 2 else None,
+                    connection_degree=profile.connection_degree,
+                )
+                # If the scraper found the real name on the profile, update it — this
+                # fixes messages addressed to the wrong person when a Sales Nav URL
+                # resolves to a different profile than expected.
+                if profile.first_name:
+                    profile_update["first_name"] = profile.first_name
+                    profile_update["last_name"] = profile.last_name or ""
+                    profile_update["full_name"] = profile.full_name or profile.first_name
                 with self._db.transaction() as conn:
-                    update_lead_profile(
-                        conn, lead.id,
-                        headline=profile.headline,
-                        about_snippet=profile.about_snippet,
-                        recent_post_1=profile.recent_posts[0] if len(profile.recent_posts) > 0 else None,
-                        recent_post_2=profile.recent_posts[1] if len(profile.recent_posts) > 1 else None,
-                        recent_post_3=profile.recent_posts[2] if len(profile.recent_posts) > 2 else None,
-                        connection_degree=profile.connection_degree,
-                    )
+                    update_lead_profile(conn, lead.id, **profile_update)
                 lead.headline = profile.headline
                 lead.about_snippet = profile.about_snippet
                 lead.recent_post_1 = profile.recent_posts[0] if len(profile.recent_posts) > 0 else None
                 lead.recent_post_2 = profile.recent_posts[1] if len(profile.recent_posts) > 1 else None
                 lead.recent_post_3 = profile.recent_posts[2] if len(profile.recent_posts) > 2 else None
+                if profile.first_name:
+                    lead.first_name = profile.first_name
+                    lead.last_name = profile.last_name or ""
+                    lead.full_name = profile.full_name or profile.first_name
         except Exception as e:
             logger.warning("Profile refresh failed for %s: %s", lead.linkedin_url, e)
 

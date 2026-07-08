@@ -122,6 +122,7 @@ def update_lead_profile(conn: sqlite3.Connection, lead_id: int, **fields):
     allowed = {
         "headline", "about_snippet", "recent_post_1", "recent_post_2",
         "recent_post_3", "connection_degree", "title", "company_name",
+        "first_name", "last_name", "full_name",
     }
     updates = {k: v for k, v in fields.items() if k in allowed}
     if not updates:
