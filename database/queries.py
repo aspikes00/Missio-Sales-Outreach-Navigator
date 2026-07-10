@@ -278,7 +278,59 @@ def get_active_lead_urls_for_brand(conn: sqlite3.Connection, brand: str) -> list
 
 def url_exists(conn: sqlite3.Connection, linkedin_url: str) -> bool:
     row = conn.execute("SELECT 1 FROM leads WHERE linkedin_url = ?", (linkedin_url,)).fetchone()
+    if row:
+        return True
+    # Also check by Sales Nav member ID — the stored URL may have been updated to /in/
+    # but the original Sales Nav member ID can still identify the same person.
+    if "/sales/lead/" in linkedin_url:
+        import re as _re
+        m = _re.search(r'/sales/lead/([^,/?#]+)', linkedin_url)
+        if m:
+            member_id = m.group(1)
+            row = conn.execute(
+                "SELECT 1 FROM leads WHERE linkedin_url LIKE ?", (f"%{member_id}%",)
+            ).fetchone()
+            if row:
+                return True
+    return False
+
+
+def pipeline_lead_exists_by_name(conn: sqlite3.Connection, brand: str, full_name: str) -> bool:
+    """True if a non-not_contacted lead with this exact full_name already exists for this brand.
+
+    Used during list import to skip re-importing people whose Sales Nav URL was previously
+    resolved to a /in/ URL (and stored that way) so the original Sales Nav URL no longer
+    matches url_exists checks.
+    """
+    if not full_name or not full_name.strip():
+        return False
+    row = conn.execute(
+        "SELECT 1 FROM leads WHERE brand = ? AND full_name = ? AND status != 'not_contacted'",
+        (brand, full_name.strip()),
+    ).fetchone()
     return row is not None
+
+
+def delete_not_contacted_duplicates(conn: sqlite3.Connection, brand: str) -> int:
+    """Delete not_contacted leads whose full_name already exists in the pipeline under another URL.
+
+    Returns the number of rows deleted. Safe to call after a list sync to clean up leads
+    re-imported after their Sales Nav URL was resolved and replaced with a /in/ URL.
+    """
+    cur = conn.execute(
+        """
+        DELETE FROM leads
+        WHERE brand = ?
+          AND status = 'not_contacted'
+          AND full_name IS NOT NULL AND full_name != ''
+          AND full_name IN (
+            SELECT full_name FROM leads
+            WHERE brand = ? AND status != 'not_contacted'
+          )
+        """,
+        (brand, brand),
+    )
+    return cur.rowcount
 
 
 def get_monthly_inmails_sent(conn: sqlite3.Connection, brand: str, year_month: str) -> int:

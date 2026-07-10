@@ -195,7 +195,12 @@ def sync_list(brand: str):
     from linkedin.auth import ensure_authenticated
     from linkedin.browser import BrowserManager
     from linkedin.navigator import sync_leads_from_list
-    from database.queries import insert_lead, url_exists
+    from database.queries import (
+        delete_not_contacted_duplicates,
+        insert_lead,
+        pipeline_lead_exists_by_name,
+        url_exists,
+    )
     from database.models import Lead
 
     with BrowserManager(settings) as browser:
@@ -208,6 +213,12 @@ def sync_list(brand: str):
     for ll in list_leads:
         with db.transaction() as conn:
             if url_exists(conn, ll.linkedin_url):
+                skipped += 1
+                continue
+            # Skip leads already in the pipeline under a different URL (e.g. the Sales Nav URL
+            # was previously resolved to a /in/ URL and stored that way — url_exists won't
+            # catch it because the stored URL no longer contains the original Sales Nav path).
+            if ll.full_name and pipeline_lead_exists_by_name(conn, brand, ll.full_name):
                 skipped += 1
                 continue
             lead = Lead(
@@ -225,11 +236,19 @@ def sync_list(brand: str):
             insert_lead(conn, lead)
             added += 1
 
+    # Clean up any leads just imported that duplicate someone already in the pipeline
+    # under a different URL (can happen when URL resolution updated the stored URL before
+    # the check above existed). Safe to run — only deletes not_contacted duplicates.
+    with db.transaction() as conn:
+        cleaned = delete_not_contacted_duplicates(conn, brand)
+
     click.echo(f"\nDone.")
     click.echo(f"  New leads imported: {added}")
     click.echo(f"  Already in DB:      {skipped}")
+    if cleaned:
+        click.echo(f"  Duplicates cleaned: {cleaned} (already in pipeline under different URL)")
     click.echo(f"  Total in list:      {len(list_leads)}")
-    if added > 0:
+    if added > 0 or cleaned:
         click.echo(f"\n  Run option 2 (preview) or option 3 (go live) next.")
 
 
