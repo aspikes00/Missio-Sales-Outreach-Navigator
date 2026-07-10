@@ -172,14 +172,22 @@ def send_connection_request(page: Page, profile_url: str, note: str, humanizer) 
 def send_direct_message(page: Page, profile_url: str, message: str, humanizer) -> bool:
     logger.info("Sending direct message to %s", profile_url)
 
-    if page.url != profile_url:
-        page.goto(profile_url, wait_until="domcontentloaded", timeout=20000)
-        time.sleep(random.uniform(2.0, 4.0))
+    # Always navigate fresh — after scraping scrolls/navigates to activity page and back,
+    # the page is in a stale JS state where action buttons may not be rendered even if
+    # page.url already matches. A fresh goto guarantees a clean hydrated page.
+    page.goto(profile_url, wait_until="domcontentloaded", timeout=20000)
+    time.sleep(random.uniform(2.0, 4.0))
 
     humanizer.page_scroll(page)
     humanizer.pre_action_pause()
 
-    msg_btn = page.query_selector(sel.MESSAGE_BUTTON)
+    # Wait for Message button to appear — LinkedIn hydrates profile action buttons
+    # asynchronously after domcontentloaded.
+    msg_btn = None
+    try:
+        msg_btn = page.wait_for_selector(sel.MESSAGE_BUTTON, timeout=8000)
+    except PWTimeout:
+        pass
     if not msg_btn:
         logger.warning("No Message button found on %s — not a 1st-degree connection?", profile_url)
         return False
