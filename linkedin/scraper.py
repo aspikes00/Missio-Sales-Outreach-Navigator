@@ -107,29 +107,43 @@ def _resolve_linkedin_url(page: Page, url: str, full_name: str = "") -> str:
 
             results = page.evaluate("""
                 () => Array.from(document.querySelectorAll('a[href*="/in/"]'))
-                    .map(a => ({href: a.href, name: (a.textContent || '').trim()}))
+                    .map(a => {
+                        // Take only the text before the bullet separator — everything after
+                        // that is job title, location, and mutual connections, which can
+                        // contain other people's names and cause false matches.
+                        const raw = (a.textContent || '').trim();
+                        const beforeBullet = raw.split('\\u2022')[0].trim();
+                        // LinkedIn cards repeat the name: "Jane Doe Jane Doe" — deduplicate.
+                        const words = beforeBullet.split(/\\s+/);
+                        const half = Math.floor(words.length / 2);
+                        const name = (half > 0 && words.slice(0, half).join(' ') === words.slice(half).join(' '))
+                            ? words.slice(0, half).join(' ')
+                            : beforeBullet;
+                        return {href: a.href, name: name};
+                    })
                     .filter(r => r.href
                         && !r.href.includes('/sales/')
                         && !r.href.includes('/mynetwork/')
                         && !r.href.includes('/search/'))
             """)
-            # Use the first result whose visible name shares at least one word with the
-            # searched name (case-insensitive). This blocks gross mismatches like
-            # "Belinda" resolving to Tyler D. Carrigan.
-            name_words = {w.lower() for w in full_name.split() if len(w) > 2}
+            # Require the first word of the searched name to match the first word of the
+            # result name. "Any word overlap" was too loose — mutual connections text like
+            # "...Anna Smith, Brad Doll & others" caused a search for "Joe Schickling" to
+            # match a card because it mentioned "Anna" in that connection list.
+            searched_first = full_name.strip().split()[0].lower() if full_name.strip() else ""
             for r in results:
                 href = (r.get("href") or "").split("?")[0].rstrip("/")
                 if "/in/" not in href or "/sales/" in href:
                     continue
-                result_name = r.get("name") or ""
-                result_words = {w.lower() for w in result_name.split() if len(w) > 2}
-                if name_words & result_words:  # at least one word overlaps
+                result_name = (r.get("name") or "").strip()
+                result_first = result_name.split()[0].lower() if result_name else ""
+                if searched_first and result_first and searched_first == result_first:
                     logger.info(
                         "Resolved Sales Nav URL via name search ('%s') → %s (result name: '%s')",
                         full_name, href, result_name,
                     )
                     return href
-            logger.debug("Name search for '%s' found no name-matching result", full_name)
+            logger.debug("Name search for '%s' found no first-name-matching result", full_name)
         except Exception as e:
             logger.debug("Name search fallback failed: %s", e)
 
