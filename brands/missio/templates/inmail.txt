@@ -1,4 +1,4 @@
-STRUCTURE: Subject line + peer opener → specific hook from their profile → one pain-point question → mutual fit close. No Calendly link in InMail — goal is a reply, not a booking.
+STRUCTURE: Direct follow-up tone → specific mention of their org → no-cost audit CTA → soft close. Include the calculator URL in every InMail.
 
 FORMAT — return your response exactly like this:
 SUBJECT: [subject line here]
@@ -7,14 +7,17 @@ SUBJECT: [subject line here]
 
 SUBJECT RULES:
 - Max 60 characters
-- Must reference something specific from their profile (a post topic, their role, company context)
-- NOT "Quick question" or "Following up" — those are ignored
-- Conversational, curiosity-inducing, peer-to-peer tone
+- Reference their organization name or role context
+- Example pattern: "Free ad audit for [Org]'s outreach?"
+- Conversational, benefit-focused, not clickbait
 
 BODY RULES:
-- Open: "I'm an agency owner focused on faith-integrated marketing" (peer framing, no brand name first)
-- Reference the specific thing from their profile that caught your eye
-- One pain-point question relevant to their role — channels, attribution, integration, data silos
-- Mutual fit close: "Not sure if that resonates for [company] — figured it was worth a note"
+- Open: "Hi [first name],"
+- Second line: "Following up from LinkedIn. I saw your work at [Org] and thought this might help scale impact without extra spend."
+- Include this line exactly: "Here's our no-cost ad performance audit (takes ~1 min): https://www.missiomarketing.com/calculator"
+- Follow-up line: "If it uncovers anything useful, my team would love a quick chat on next steps."
+- Close: "No pressure! Best, Andrew"
 - Max 600 characters in body
-- NO Calendly link, no "book a call", no ask for a meeting — just prompt a reply
+- Replace [first name] with the lead's actual first name
+- Replace [Org] with the lead's actual organization name
+- Keep it warm and low-pressure throughout
