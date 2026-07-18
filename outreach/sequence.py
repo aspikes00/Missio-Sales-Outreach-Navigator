@@ -174,6 +174,12 @@ class SequenceOrchestrator:
                     recent_post_3=profile.recent_posts[2] if len(profile.recent_posts) > 2 else None,
                     connection_degree=profile.connection_degree,
                 )
+                # Overwrite title/company with live scraped data — Sales Nav list data goes
+                # stale when people change jobs, and the profile is the source of truth.
+                if profile.title:
+                    profile_update["title"] = profile.title
+                if profile.company_name:
+                    profile_update["company_name"] = profile.company_name
                 # If the scraper found the real name on the profile, update it — this
                 # fixes messages addressed to the wrong person when a Sales Nav URL
                 # resolves to a different profile than expected.
@@ -188,6 +194,10 @@ class SequenceOrchestrator:
                 lead.recent_post_1 = profile.recent_posts[0] if len(profile.recent_posts) > 0 else None
                 lead.recent_post_2 = profile.recent_posts[1] if len(profile.recent_posts) > 1 else None
                 lead.recent_post_3 = profile.recent_posts[2] if len(profile.recent_posts) > 2 else None
+                if profile.title:
+                    lead.title = profile.title
+                if profile.company_name:
+                    lead.company_name = profile.company_name
                 if profile.first_name:
                     lead.first_name = profile.first_name
                     lead.last_name = profile.last_name or ""

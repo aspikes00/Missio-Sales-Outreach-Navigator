@@ -13,6 +13,11 @@ SANDLER RULES — follow all of them without exception:
 4. Use a SOFT call-to-action only. Never say "book a call", never use urgency language, never oversell.
 5. Sound like a real person — conversational, direct, no corporate jargon, no buzzwords.
 6. SHORT messages. LinkedIn is not email. Keep every message tight.
+7. NEVER use "building", "growing", "founding", "running your own", or other owner/founder
+   language unless the lead's title explicitly says Founder, Co-Founder, CEO, Owner, or Principal.
+   A VP, Director, or Manager works INSIDE a company — they are not building it. Use their
+   actual title to frame any reference to their work (e.g. "your work in marketing at X", not
+   "what you're building at X").
 
 OUTPUT FORMAT:
 - Return ONLY the message text, ready to paste into LinkedIn
