@@ -163,28 +163,60 @@ def scrape_profile(page: Page, profile_url: str, full_name: str = "") -> Optiona
 
     profile = ScrapedProfile(linkedin_url=profile_url)
 
-    # Wait for the name heading to render before extracting — LinkedIn lazy-loads profile cards.
+    # Wait for the name heading to render — LinkedIn lazy-loads profile cards.
+    # Use a JS poll so we wait for actual non-empty text, not just the element's existence.
+    try:
+        page.wait_for_function(
+            "() => { const h = document.querySelector('h1'); return h && h.innerText.trim().length > 0; }",
+            timeout=8000,
+        )
+    except PWTimeout:
+        logger.debug("h1 did not populate within 8s — will try fallbacks")
+
     _NAME_CANDIDATES = [
         'h1.text-heading-xlarge',
         'h1[class*="text-heading"]',
         'h1',
     ]
     for _ns in _NAME_CANDIDATES:
-        try:
-            page.wait_for_selector(_ns, timeout=5000)
-            break
-        except PWTimeout:
-            continue
-
-    for _ns in _NAME_CANDIDATES:
         profile.full_name = _safe_text(page, _ns)
         if profile.full_name:
             break
+
+    # Final fallback: page title is server-rendered and always contains the name.
+    # Format is "[Full Name] - [Title] | LinkedIn" or "[Full Name] | LinkedIn".
+    if not profile.full_name:
+        try:
+            page_title = page.title()
+            if " - " in page_title:
+                candidate = page_title.split(" - ")[0].strip()
+            elif " | " in page_title:
+                candidate = page_title.split(" | ")[0].strip()
+            else:
+                candidate = ""
+            # Sanity-check: skip generic titles like "LinkedIn" or "Sign In"
+            if candidate and candidate.lower() not in ("linkedin", "sign in", "page not found"):
+                profile.full_name = candidate
+                logger.debug("Name extracted from page title: %s", candidate)
+        except Exception as e:
+            logger.debug("Page title fallback failed: %s", e)
 
     if profile.full_name:
         parts = profile.full_name.strip().split(" ", 1)
         profile.first_name = parts[0]
         profile.last_name = parts[1] if len(parts) > 1 else ""
+
+    # Warn when the scraped name disagrees with the stored name — a mismatch usually means
+    # URL resolution sent us to the wrong person's profile.
+    if profile.first_name and full_name:
+        stored_first = full_name.strip().split()[0].lower()
+        scraped_first = profile.first_name.lower()
+        if stored_first and scraped_first and stored_first != scraped_first:
+            logger.warning(
+                "NAME MISMATCH — stored: '%s', scraped from profile: '%s' (url: %s). "
+                "URL may have resolved to the wrong person.",
+                full_name, profile.full_name, resolved_url,
+            )
 
     profile.headline = _safe_text(page, sel.PROFILE_HEADLINE)
     profile.location = _safe_text(page, sel.PROFILE_LOCATION)
