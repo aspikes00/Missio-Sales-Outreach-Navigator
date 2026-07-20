@@ -204,6 +204,17 @@ class SequenceOrchestrator:
                     lead.full_name = profile.full_name or profile.first_name
         except Exception as e:
             logger.warning("Profile refresh failed for %s: %s", lead.linkedin_url, e)
+            profile = None
+
+        # Safety gate: if the scrape ran but returned no name, we can't verify who's on the
+        # page. Rather than send "Hi WrongName" to the wrong person, skip and retry next session.
+        # (profile=None means scraping itself threw — also skip for the same reason.)
+        if profile is not None and not profile.first_name:
+            logger.warning(
+                "Skipping %s — scrape returned no name, cannot verify profile identity.",
+                lead.linkedin_url,
+            )
+            return True
 
         # Use whatever URL the browser is currently on after scraping — _resolve_linkedin_url
         # already stripped the expired session context, so this is always cleaner than
