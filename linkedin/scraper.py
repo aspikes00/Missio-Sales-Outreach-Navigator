@@ -188,18 +188,30 @@ def scrape_profile(page: Page, profile_url: str, full_name: str = "") -> Optiona
     if not profile.full_name:
         try:
             page_title = page.title()
+            current_url = page.url
+            logger.debug("Name extraction falling back to page title. URL: %s | Title: %s", current_url, page_title)
             if " - " in page_title:
                 candidate = page_title.split(" - ")[0].strip()
             elif " | " in page_title:
                 candidate = page_title.split(" | ")[0].strip()
             else:
                 candidate = ""
-            # Sanity-check: skip generic titles like "LinkedIn" or "Sign In"
-            if candidate and candidate.lower() not in ("linkedin", "sign in", "page not found"):
+            # Reject known non-name page titles
+            _BAD_TITLES = {
+                "linkedin", "sign in", "page not found", "sales navigator",
+                "feed", "my network", "jobs", "messaging", "notifications",
+                "search results", "people you may know",
+            }
+            if candidate and candidate.lower() not in _BAD_TITLES:
                 profile.full_name = candidate
-                logger.debug("Name extracted from page title: %s", candidate)
+                logger.info("Name from page title: '%s' (url: %s)", candidate, current_url)
+            else:
+                logger.warning(
+                    "Name extraction failed completely. URL: %s | Title: '%s' | Stored name: '%s'",
+                    current_url, page_title, full_name,
+                )
         except Exception as e:
-            logger.debug("Page title fallback failed: %s", e)
+            logger.warning("Page title fallback failed for '%s': %s | URL: %s", full_name, e, page.url)
 
     if profile.full_name:
         parts = profile.full_name.strip().split(" ", 1)
