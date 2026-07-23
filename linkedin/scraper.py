@@ -163,14 +163,17 @@ def scrape_profile(page: Page, profile_url: str, full_name: str = "") -> Optiona
 
     profile = ScrapedProfile(linkedin_url=profile_url)
 
-    # Wait for the name heading to render — LinkedIn lazy-loads profile cards.
-    # Use a JS poll so we wait for actual non-empty text, not just the element's existence.
-    try:
-        page.wait_for_function(
-            "() => { const h = document.querySelector('h1'); return h && h.innerText.trim().length > 0; }",
-            timeout=8000,
-        )
-    except PWTimeout:
+    # Poll for h1 non-empty text — wait_for_function uses eval() which LinkedIn's CSP blocks.
+    # Use query_selector + inner_text() in a loop instead; no eval required.
+    for _attempt in range(16):  # up to 8 seconds at 0.5s intervals
+        try:
+            _h1 = page.query_selector('h1')
+            if _h1 and _h1.inner_text().strip():
+                break
+        except Exception:
+            pass
+        time.sleep(0.5)
+    else:
         logger.debug("h1 did not populate within 8s — will try fallbacks")
 
     _NAME_CANDIDATES = [
