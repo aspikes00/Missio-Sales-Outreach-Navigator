@@ -37,6 +37,9 @@ echo ""
 echo "  9)  Mark a lead as booked"
 echo "  10) Mark a lead as do-not-contact"
 echo ""
+echo "  11) Voice memo queue              (scripts to record on LinkedIn mobile)"
+echo "  12) Mark a voice memo as sent"
+echo ""
 echo "  q)  Quit"
 echo ""
 printf "  What would you like to do? "
@@ -116,6 +119,20 @@ case "$choice" in
     printf "  Paste the LinkedIn profile URL to add to do-not-contact: "
     read -r url
     $PYTHON main.py mark-dnc --url "$url"
+    ;;
+
+  11)
+    echo "Fetching voice memo queue..."
+    echo "(These are short scripts to read aloud on LinkedIn mobile as voice notes.)"
+    echo ""
+    $PYTHON main.py voice-queue --brand missio
+    ;;
+
+  12)
+    echo ""
+    printf "  Enter the Log ID from the voice memo queue: "
+    read -r log_id
+    $PYTHON main.py mark-voice-sent --brand missio --log-id "$log_id"
     ;;
 
   q|Q)

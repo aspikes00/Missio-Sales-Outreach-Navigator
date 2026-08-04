@@ -18,6 +18,20 @@ SANDLER RULES — follow all of them without exception:
    A VP, Director, or Manager works INSIDE a company — they are not building it. Use their
    actual title to frame any reference to their work (e.g. "your work in marketing at X", not
    "what you're building at X").
+8. Ask exactly ONE question per message. Every additional question cuts response rates. Never ask
+   two things in one message — not even combined with "and". Best question types: binary (yes/no),
+   clarifying ("What's your current approach to X?"), or permission-based ("Open to learning more?").
+   Worst: open-ended ("What are your biggest challenges?") or compound ("How are you handling X and
+   when could we chat?"). One question. Full stop.
+9. "You" and "your" must appear more times than "I", "we", "our", and "my" combined. Before
+   finalizing any message, count both groups. If the self-referential count is equal to or higher
+   than the prospect-referential count, rewrite the message from scratch. The prospect's world
+   must be the subject of every sentence.
+10. Lead with a specific, observable fact about THEIR situation before mentioning anything about
+    the sender's business. Reference something real: a post they wrote, a company hiring trend,
+    a role transition, an industry shift relevant to their position. Then add the implication —
+    one sentence on why this matters or what it costs. Generic observations ("I see you're in
+    marketing") are worse than no observation at all — they prove you didn't do your homework.
 
 OUTPUT FORMAT:
 - Return ONLY the message text, ready to paste into LinkedIn
@@ -182,3 +196,53 @@ TONE & STRUCTURE GUIDE (follow this template's voice, structure, and key rules e
 {prior_block}
 
 Write the message now:"""
+
+
+VOICE_MEMO_CHAR_LIMIT = 400  # ~60-75 words — reads in 18-22 seconds
+
+
+def build_voice_memo_prompt(
+    lead: Lead,
+    brand_name: str,
+    brand_description: str,
+    brand_voice_notes: str,
+) -> str:
+    posts_block = ""
+    if lead.recent_posts:
+        posts_block = "\n".join(f"Recent post: {p}" for p in lead.recent_posts[:2])
+    else:
+        posts_block = "Recent posts: (none — use headline, title, and company)"
+
+    voice_block = f"\nVOICE & STYLE NOTES FOR THIS BRAND:\n{brand_voice_notes}" if brand_voice_notes else ""
+
+    return f"""\
+Write a LinkedIn voice note SCRIPT for Andrew to read aloud on his phone. This is spoken audio, \
+not a text message — write it as natural speech.
+
+HARD RULES:
+- 60-75 words MAXIMUM (this is ~20 seconds spoken — count every word carefully)
+- Conversational and warm — the way Andrew would talk to a peer, not a prospect
+- Reference exactly ONE specific detail from their profile (a post topic, their role context, \
+company, or headline observation)
+- End with ONE binary yes/no or permission question ("Would that be useful?" / "Is that on your \
+radar?" / "Worth a quick chat?") — never an open-ended question
+- No URLs, no links, no product names — voice only
+- Do NOT start with "I" — start with "Hey [first name]" or their name
+- Output ONLY the script text Andrew will speak. No labels, no explanations.
+- Add (N words) at the very end on its own line so Andrew can verify
+
+SENDER CONTEXT (awareness only — do not pitch):
+Andrew is from {brand_name}. {brand_description}
+This is a personal check-in right after connecting — not a sales call setup.
+{voice_block}
+
+LEAD PROFILE:
+Name: {lead.full_name or lead.first_name}
+First name: {lead.first_name}
+Title: {lead.title or "(unknown)"}
+Company: {lead.company_name or "(unknown)"}
+Headline: {lead.headline or "(none)"}
+About: {lead.about_snippet or "(none)"}
+{posts_block}
+
+Write the voice note script now:"""

@@ -341,6 +341,67 @@ def populate_list(brand: str, search_url: str, list_name: str, max_per_session: 
         click.echo(f"\n  All available search results have been added to the list.")
 
 
+@cli.command("voice-queue")
+@click.option("--brand", required=True, help="Brand slug.")
+@click.option("--days", default=14, show_default=True,
+              help="Show scripts generated in the last N days.")
+def voice_queue(brand: str, days: int):
+    """Show pending voice memo scripts ready to record and send from LinkedIn mobile.
+
+    After the agent sends message_1, it generates a short spoken script (~20 seconds)
+    for each lead. Run this command each morning to see who's in the queue.
+    Record each one as a LinkedIn voice note from your phone and send it directly
+    in the conversation thread. Then use mark-voice-sent to clear it from the queue.
+    """
+    settings, db = _load_common()
+    from database.queries import get_pending_voice_scripts
+
+    with db.transaction() as conn:
+        items = get_pending_voice_scripts(conn, brand, days=days)
+
+    if not items:
+        click.echo(f"\nNo pending voice memo scripts in the last {days} days.")
+        click.echo("They appear here automatically after message_1 is sent to each new connection.")
+        return
+
+    click.echo(f"\n{'='*64}")
+    click.echo(f"  VOICE MEMO QUEUE — {len(items)} pending  ({brand})")
+    click.echo(f"{'='*64}")
+    click.echo("  Record each script as a LinkedIn Voice Note from your phone.")
+    click.echo("  Open the DM thread → tap the mic icon → read the script aloud.")
+    click.echo(f"{'='*64}\n")
+
+    for i, (lead, script, log_id) in enumerate(items, 1):
+        click.echo(f"  [{i}] {lead.full_name or lead.first_name}  |  {lead.title or ''}  @  {lead.company_name or ''}")
+        click.echo(f"      Log ID: {log_id}  (use this to mark as sent)")
+        click.echo()
+        click.echo(f"  SCRIPT:")
+        for line in script.splitlines():
+            click.echo(f"    {line}")
+        click.echo()
+        click.echo(f"  {'─'*60}")
+        click.echo()
+
+    click.echo(f"  To mark one as sent after recording:")
+    click.echo(f"    python main.py mark-voice-sent --brand {brand} --log-id <Log ID>")
+    click.echo()
+
+
+@cli.command("mark-voice-sent")
+@click.option("--brand", required=True, help="Brand slug.")
+@click.option("--log-id", "log_id", required=True, type=int,
+              help="Log ID from the voice-queue output.")
+def mark_voice_sent(brand: str, log_id: int):
+    """Mark a voice memo as recorded and sent. Removes it from the voice-queue."""
+    settings, db = _load_common()
+    from database.queries import mark_voice_script_sent
+
+    with db.transaction() as conn:
+        mark_voice_script_sent(conn, log_id)
+
+    click.echo(f"Voice memo (log ID {log_id}) marked as sent.")
+
+
 @cli.command("list-brands")
 def list_brands():
     """List all configured brands."""

@@ -255,6 +255,17 @@ class SequenceOrchestrator:
             print(f"{'='*60}\n")
             if stage_name == "connection_note" and self._brand.daily_inmail_limit > 0 and (lead.recent_post_1 or lead.headline):
                 self._try_send_inmail(browser, lead, today, result)
+            if stage_name == "message_1":
+                try:
+                    script = self._generator.generate_voice_script(lead, self._brand)
+                    print(f"\n{'~'*60}")
+                    print(f"[DRY RUN] VOICE MEMO SCRIPT for {lead.first_name}")
+                    print(f"(Record on LinkedIn mobile after message_1 sends)")
+                    print(f"{'~'*60}")
+                    print(script)
+                    print(f"{'~'*60}\n")
+                except Exception as e:
+                    logger.warning("Voice script generation failed in dry run for %s: %s", lead.linkedin_url, e)
             return True
 
         # If this is a message stage but the URL is still a Sales Nav URL (resolution failed),
@@ -345,6 +356,23 @@ class SequenceOrchestrator:
                     stat_field = "connections_sent" if stage_name == "connection_note" else "messages_sent"
                     increment_daily_stat(conn, today, self._brand.slug, stat_field)
                 result.leads_processed.append(lead.linkedin_url)
+
+                # After message_1 sends, generate a voice memo script for Andrew to record on mobile.
+                # Stored as a pending outreach_log entry — surfaced via the voice-queue CLI command.
+                if stage_name == "message_1":
+                    try:
+                        script = self._generator.generate_voice_script(lead, self._brand)
+                        with self._db.transaction() as conn:
+                            insert_outreach_log(
+                                conn, lead.id, self._brand.slug,
+                                "voice_note_script", script, status="pending",
+                            )
+                        logger.info("Voice memo script saved for %s", lead.full_name or lead.first_name)
+                    except Exception as e:
+                        logger.warning(
+                            "Voice memo script generation failed for %s: %s",
+                            lead.linkedin_url, e,
+                        )
 
                 # Send InMail alongside the connection request if lead has personalization data
                 if (

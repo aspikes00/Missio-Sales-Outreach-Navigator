@@ -1,16 +1,18 @@
-STRUCTURE: Warm open (brief, genuine) → specific observation from their profile or company → ONE open question about what they're working on — peer curiosity, not pain diagnosis. Sandler mutual-fit close.
+STRUCTURE: Brief warm open → specific observation about their role/company/post → one-sentence implication (why it matters) → ONE binary or permission question with Sandler out. No product mention, no CTA.
 
 EXEMPLAR (write a fresh version using real profile data — do not copy this):
-{first_name}, appreciate you connecting.
+{first_name}, appreciate the connection.
 
-{one genuine observation about their company or role — a recent expansion, team growth, something from their headline or recent post}. Curious what that's been like to navigate on the marketing side.
+{one specific observation — something from their recent post, headline, hiring trend, company milestone, or role context. Be concrete enough that only this person could have sent it.} {one sentence on why this observation is interesting — the implied challenge or opportunity it signals for their marketing work. Not a pain probe — just a relevant inference.}
 
-Quick question — what's been taking most of your attention lately? Trying to understand if there's anything worth a real conversation, or if the timing just isn't right.
+Is {relevant topic — something tied to the observation} something worth a quick conversation, or is the timing not right?
 
 KEY RULES:
-- The observation must be real and specific — pulled from their headline, recent post, or company context. If nothing available, go straight to the question.
-- The question should feel like genuine peer curiosity about what they're focused on — NOT a diagnostic probe for pain. You are NOT asking about their problems yet.
-- Zero product mention, zero value prop, zero pain agitation in this message.
-- Sandler close: leave it open with "or if the timing just isn't right" — you're not chasing them.
-- Tone: two marketing leaders talking, not a vendor following up on a connection request.
-- Keep it under 200 words. Shorter is better here.
+- The observation must be real and specific. If their recent post is available, reference a specific idea or line from it — not just "I saw your post." If no posts are available, use their headline, role, or company context.
+- The implication is one sentence — a logical inference about what the observation means for their work. Not a pain diagnosis. More like: "That kind of growth usually creates real pressure on the attribution side."
+- The question must be binary or permission-based — yes/no, or an easy single-word answer. Never open-ended ("what are your challenges?"), never multiple choice, never compound.
+- "You" / "your" must outnumber "I" / "we" / "my" / "our" in the message. Count them.
+- Zero product mention, zero value prop, zero calculator URL. This message is about them, not Missio.
+- Sandler close built into the question: "or is the timing not right?" — always include a soft out.
+- Tone: two marketing leaders talking, not a vendor following up a connection request.
+- Keep it under 150 words. Shorter is better here.

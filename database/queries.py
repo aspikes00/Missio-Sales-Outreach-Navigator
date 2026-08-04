@@ -169,10 +169,42 @@ def insert_outreach_log(
 
 def get_outreach_history(conn: sqlite3.Connection, lead_id: int) -> list[OutreachLog]:
     rows = conn.execute(
-        "SELECT * FROM outreach_log WHERE lead_id = ? ORDER BY sent_at ASC",
+        """SELECT * FROM outreach_log
+           WHERE lead_id = ?
+             AND (stage != 'voice_note_script' OR status = 'sent')
+           ORDER BY sent_at ASC""",
         (lead_id,),
     ).fetchall()
     return [OutreachLog.from_row(tuple(r)) for r in rows]
+
+
+def get_pending_voice_scripts(
+    conn: sqlite3.Connection, brand: str, days: int = 14
+) -> list[tuple[Lead, str, int]]:
+    """Return (lead, script_text, log_id) for voice note scripts not yet marked sent."""
+    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    log_rows = conn.execute(
+        """SELECT id, lead_id, message_text FROM outreach_log
+           WHERE brand = ? AND stage = 'voice_note_script' AND status = 'pending'
+             AND sent_at >= ?
+           ORDER BY sent_at DESC""",
+        (brand, cutoff),
+    ).fetchall()
+    results = []
+    for row in log_rows:
+        log_id, lead_id, script = row[0], row[1], row[2]
+        lead = get_lead_by_id(conn, lead_id)
+        if lead:
+            results.append((lead, script, log_id))
+    return results
+
+
+def mark_voice_script_sent(conn: sqlite3.Connection, log_id: int):
+    """Mark a voice memo script as recorded and sent by Andrew."""
+    conn.execute(
+        "UPDATE outreach_log SET status = 'sent' WHERE id = ? AND stage = 'voice_note_script'",
+        (log_id,),
+    )
 
 
 # Explicit column list keeps from_row positional mapping stable regardless of

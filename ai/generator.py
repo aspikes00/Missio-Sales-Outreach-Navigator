@@ -5,7 +5,7 @@ from typing import Optional
 import anthropic
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from ai.prompts import CHAR_LIMITS, SYSTEM_PROMPT, build_prompt
+from ai.prompts import CHAR_LIMITS, SYSTEM_PROMPT, VOICE_MEMO_CHAR_LIMIT, build_prompt, build_voice_memo_prompt
 from config.settings import BrandConfig
 from database.models import Lead
 
@@ -103,11 +103,35 @@ class MessageGenerator:
                     lead.full_name, subject, len(subject), len(body))
         return subject, body
 
+    def generate_voice_script(self, lead: Lead, brand: BrandConfig) -> str:
+        """Generate a 60-75 word voice note script for Andrew to record and send from mobile."""
+        prompt = build_voice_memo_prompt(
+            lead=lead,
+            brand_name=brand.name,
+            brand_description=brand.description,
+            brand_voice_notes=brand.voice_notes,
+        )
+        script = self._call_api(prompt, max_tokens=250)
+        script = _strip_em_dashes(script).strip()
+        if len(script) > VOICE_MEMO_CHAR_LIMIT:
+            logger.warning(
+                "Voice script (%d chars) exceeds limit. Retrying with explicit constraint.",
+                len(script),
+            )
+            script = self._call_api(
+                prompt + f"\n\nIMPORTANT: Your draft was too long. Rewrite it under "
+                         f"{VOICE_MEMO_CHAR_LIMIT} characters. Count every word.",
+                max_tokens=250,
+            )
+            script = _strip_em_dashes(script).strip()
+        logger.info("Generated voice script for %s (%d chars)", lead.full_name, len(script))
+        return script
+
     @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=2, max=30))
-    def _call_api(self, user_prompt: str) -> str:
+    def _call_api(self, user_prompt: str, max_tokens: int = 600) -> str:
         response = self._client.messages.create(
             model=self._model,
-            max_tokens=600,
+            max_tokens=max_tokens,
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_prompt}],
         )
